@@ -1,0 +1,170 @@
+#include "stdlib.h"
+#include "stdio.h"
+#define JU 0x1
+#define MA 0x10
+#define XIANG 0x100
+#define SHI 0x1000
+#define JIANG 0x10000
+typedef struct _chess
+{
+	char chess[9][10];
+	int turn:1;
+}CHESS;
+int calvalue()
+{
+	int i=0,j=0;
+	return 0;
+}
+
+typedef struct _move
+{
+	int sourcex;
+	int sourcey;
+	int destx;
+	int desty;
+}MOVE;
+typedef struct _index
+{
+	int size;
+	int index;
+}INDEX;
+
+typedef struct _move_list
+{
+	int count;
+	MOVE* move_list;
+}MOVELIST;
+typedef struct _treecoord
+{
+	int depth;
+	INDEX* index;
+}TREECOORD;
+typedef struct _node
+{
+	MOVELIST* list_ptr;
+	struct _node* next;
+}NODE;
+typedef struct _movetree
+{
+	NODE* root;
+}MOVETREE;
+TREECOORD* init_treecoord(int depth)
+{
+	TREECOORD* treecoord = (TREECOORD*)malloc(sizeof(TREECOORD));
+	treecoord->depth = depth;
+	treecoord->index = (INDEX*)malloc(sizeof(INDEX)*depth);
+	int i = 0;
+	for(;i<depth;i++)
+	{
+		treecoord->index[i].index = 0;
+		treecoord->index[i].size = 0;
+	}
+	return treecoord;
+}
+
+int getmovetreesize(MOVETREE* movetree,TREECOORD* treecoord)
+{
+	int i = 0;
+	NODE* node = movetree->root;
+	for(;i<treecoord->depth;i++)
+	{
+		treecoord->index[i].size = node->list_ptr->count;
+		node=node->next;
+	}
+	return 0;
+}
+int incr(MOVETREE* movetree,TREECOORD* treecoord)
+{
+	int i = 0;
+	for(;i<treecoord->depth;i++)
+	{
+		if(treecoord->index[treecoord->depth-i].size == 0)
+		{
+			getmovetreesize(movetree,treecoord);
+		}
+		if(treecoord->index[treecoord->depth-i].index<treecoord->index[treecoord->depth-i].size - 1)
+		{
+			treecoord->index[treecoord->depth-i].index++;
+			return 1;
+		}
+	}
+}
+
+int is_end(TREECOORD* treecoord)
+{
+	int i = 0;
+	for(;i<treecoord->depth;i++)
+	{
+		if(treecoord->index[treecoord->depth-i].index!=treecoord->index[treecoord->depth-i].size - 1)
+		{
+			return 0;
+		}
+	}
+	return 1;
+
+}
+
+int append_to_move_tree(MOVETREE* movetree,TREECOORD* treecoord,MOVE* move)
+{
+}
+CHESS* getchessbytreecoord(MOVETREE* movetree,TREECOORD* treecoord)
+{
+}
+MOVELIST* get_move_list(CHESS* pchess)
+{
+	int i = 0;
+	int j = 0;
+	for(;i<10;i++)
+	{
+		for(j=0;j<9;j++)
+		{
+			if(pchess->chess[j][i] & JU == pchess->turn)
+			{
+				if(canmove(pchess,i,j))
+				{
+					int stepi = i;
+					int stepj = j;
+				}
+			}
+		}
+	}
+}
+CHESS* getchessbymove(CHESS* pchess,MOVE* move)
+{
+}
+int cleantreecoord(TREECOORD* treecoord)
+{
+	free(treecoord);
+}
+MOVELIST* nextmove(CHESS* pchess)
+{	
+	TREECOORD* treecoord = init_treecoord(1);
+	MOVETREE* movetree;
+	do
+	{
+		CHESS* pchesscur = getchessbytreecoord(movetree,treecoord);
+		MOVELIST* list_ptr = get_move_list(pchesscur);
+		int i = 0;
+		for(;i<list_ptr->count;i++)
+		{
+			CHESS* new_chess = getchessbymove(pchesscur,list_ptr->move_list+i);
+			if(calvalue()> -1000)
+			{
+				append_to_move_tree(movetree,treecoord,list_ptr->move_list+i);
+			}
+		}
+		incr(movetree,treecoord);
+		if(is_end(treecoord))
+		{
+			TREECOORD* newtreecoord = init_treecoord(treecoord->depth+1);
+			cleantreecoord(treecoord);
+			treecoord = newtreecoord;
+		}
+	}while(1);
+}
+
+
+int main()
+{
+	nextmove(0);
+}
