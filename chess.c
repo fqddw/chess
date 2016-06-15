@@ -129,8 +129,33 @@ MOVELIST* get_move_list(CHESS* pchess)
 		}
 	}
 }
+
+CHESS* copychess(CHESS* pchess)
+{
+	CHESS* newchess = (CHESS*)malloc(sizeof(CHESS));
+	newchess->turn =pchess->turn;
+	int i = 9;
+	int j = 10;
+	for(i=0;i<9;i++)
+	{
+		for(j=0;j<10;j++)
+		{
+			newchess->chess[i][j] = pchess->chess[i][j];
+		}
+	}
+	return newchess;
+}
 CHESS* getchessbymove(CHESS* pchess,MOVE* move)
 {
+	int i = move->destx;
+	int j = move->desty;
+	CHESS* newchess = copychess(pchess);
+	if(pchess->chess[i][j] == 0)
+	{
+		newchess->chess[i][j] = pchess->chess[i][j];
+	}
+	newchess->turn == 0?1:0;
+	return newchess;
 }
 int cleantreecoord(TREECOORD* treecoord)
 {
