@@ -5,6 +5,7 @@
 #define XIANG 0x100
 #define SHI 0x1000
 #define JIANG 0x10000
+struct _move_list;
 typedef struct _chess
 {
 	char chess[9][10];
@@ -22,6 +23,7 @@ typedef struct _move
 	int sourcey;
 	int destx;
 	int desty;
+	struct _move_list* next;
 }MOVE;
 typedef struct _index
 {
@@ -39,14 +41,9 @@ typedef struct _treecoord
 	int depth;
 	INDEX* index;
 }TREECOORD;
-typedef struct _node
-{
-	MOVELIST* list_ptr;
-	struct _node* next;
-}NODE;
 typedef struct _movetree
 {
-	NODE* root;
+	MOVELIST* root;
 }MOVETREE;
 TREECOORD* init_treecoord(int depth)
 {
@@ -65,11 +62,13 @@ TREECOORD* init_treecoord(int depth)
 int getmovetreesize(MOVETREE* movetree,TREECOORD* treecoord)
 {
 	int i = 0;
-	NODE* node = movetree->root;
+	MOVELIST* movelist = movetree->root;
+	MOVE tmpmove = {0,0,0,0,movelist};
+	MOVE* move = &tmpmove;
 	for(;i<treecoord->depth;i++)
 	{
-		treecoord->index[i].size = node->list_ptr->count;
-		node=node->next;
+		move = move->next->move_list+i;
+		treecoord->index[i].size = movelist->count;
 	}
 	return 0;
 }
@@ -107,29 +106,10 @@ int is_end(TREECOORD* treecoord)
 int append_to_move_tree(MOVETREE* movetree,TREECOORD* treecoord,MOVE* move)
 {
 }
-CHESS* getchessbytreecoord(MOVETREE* movetree,TREECOORD* treecoord)
+int clearchess(CHESS* pchess)
 {
+	free(pchess);
 }
-MOVELIST* get_move_list(CHESS* pchess)
-{
-	int i = 0;
-	int j = 0;
-	for(;i<10;i++)
-	{
-		for(j=0;j<9;j++)
-		{
-			if(pchess->chess[j][i] & JU == pchess->turn)
-			{
-				if(canmove(pchess,i,j))
-				{
-					int stepi = i;
-					int stepj = j;
-				}
-			}
-		}
-	}
-}
-
 CHESS* copychess(CHESS* pchess)
 {
 	CHESS* newchess = (CHESS*)malloc(sizeof(CHESS));
@@ -157,6 +137,55 @@ CHESS* getchessbymove(CHESS* pchess,MOVE* move)
 	newchess->turn == 0?1:0;
 	return newchess;
 }
+
+CHESS* getchessbytreecoord(CHESS* pchess,MOVETREE* movetree,TREECOORD* treecoord)
+{
+	int i = 0;
+	CHESS* pchesslast = copychess(pchess);
+	MOVELIST* movelist = movetree->root;
+	MOVE tmpmove = {0,0,0,0,movelist};
+	MOVE* move = &tmpmove;
+	for(;i<treecoord->depth;i++)
+	{
+		move = move->next->move_list+treecoord->index[i].index;
+		CHESS* pchesscur = getchessbymove(pchesslast,move);
+		clearchess(pchesslast);
+		pchesslast = pchesscur;
+	}
+}
+MOVELIST* get_move_list(CHESS* pchess)
+{
+	int i = 0;
+	int j = 0;
+	for(;i<10;i++)
+	{
+		for(j=0;j<9;j++)
+		{
+			switch(pchess->chess[j][i])
+			{
+				case JU:
+				int k = i;
+				int l = j;
+				for(;k<10;k++)
+				{
+					if(pchess->chess[j][k] & MASK == pchess->turn)
+					{
+						break;
+					}
+				}
+				k = i;
+				for(;k>=0;k--)
+				{
+				}
+				break;
+				case MA:
+				break;
+				default:
+				;
+			}
+		}
+	}
+}
 int cleantreecoord(TREECOORD* treecoord)
 {
 	free(treecoord);
@@ -167,7 +196,7 @@ MOVELIST* nextmove(CHESS* pchess)
 	MOVETREE* movetree;
 	do
 	{
-		CHESS* pchesscur = getchessbytreecoord(movetree,treecoord);
+		CHESS* pchesscur = getchessbytreecoord(pchess,movetree,treecoord);
 		MOVELIST* list_ptr = get_move_list(pchesscur);
 		int i = 0;
 		for(;i<list_ptr->count;i++)
