@@ -1,14 +1,19 @@
 #include "stdlib.h"
 #include "stdio.h"
 #define JU 0x1
-#define MA 0x10
-#define XIANG 0x100
-#define SHI 0x1000
-#define JIANG 0x10000
+#define MA (0x1<<1)
+#define XIANG (0x1<<2)
+#define SHI (0x1<<3)
+#define JIANG (0x1<<4)
+#define PAO (0x1<<5)
+#define BING (0x1<<6)
+#define MASK (0x1<<7)
+#define BLACK MASK
+#define RED 0
 struct _move_list;
 typedef struct _chess
 {
-	char chess[9][10];
+	int chess[9][10];
 	int turn:1;
 }CHESS;
 int calvalue()
@@ -45,6 +50,9 @@ typedef struct _movetree
 {
 	MOVELIST* root;
 }MOVETREE;
+int canmove(CHESS* pchess,MOVE* move)
+{
+}
 TREECOORD* init_treecoord(int depth)
 {
 	TREECOORD* treecoord = (TREECOORD*)malloc(sizeof(TREECOORD));
@@ -140,8 +148,10 @@ CHESS* getchessbymove(CHESS* pchess,MOVE* move)
 
 CHESS* getchessbytreecoord(CHESS* pchess,MOVETREE* movetree,TREECOORD* treecoord)
 {
-	int i = 0;
 	CHESS* pchesslast = copychess(pchess);
+	if(!movetree->root)
+		return pchesslast;
+	int i = 0;
 	MOVELIST* movelist = movetree->root;
 	MOVE tmpmove = {0,0,0,0,movelist};
 	MOVE* move = &tmpmove;
@@ -152,33 +162,106 @@ CHESS* getchessbytreecoord(CHESS* pchess,MOVETREE* movetree,TREECOORD* treecoord
 		clearchess(pchesslast);
 		pchesslast = pchesscur;
 	}
+	return pchesslast;
 }
 MOVELIST* get_move_list(CHESS* pchess)
 {
+	MOVELIST* movelist= (MOVELIST*)malloc(sizeof(MOVELIST));
 	int i = 0;
 	int j = 0;
 	for(;i<10;i++)
 	{
 		for(j=0;j<9;j++)
 		{
+			int mask = pchess->chess[j][i] & MASK;
+			if(mask != MASK)
+			{
+				printf("%d\n",mask);
+				continue;
+			}
+			MOVE movearray[20] = {0};
+			int index = 0;
 			switch(pchess->chess[j][i])
 			{
-				case JU:
-				int k = i;
-				int l = j;
-				for(;k<10;k++)
-				{
-					if(pchess->chess[j][k] & MASK == pchess->turn)
+				case JU|MASK:
 					{
-						break;
+						int k = i;
+						int l = j;
+						for(;k<10;k++)
+						{
+							if(pchess->chess[j][k] != 0)
+							{
+								if(pchess->chess[j][k] & MASK != pchess->turn)
+								{
+									MOVE move = {0};
+									move.sourcex = j;
+									move.sourcey = i;
+									move.destx = j;
+									move.desty = k;
+									move.next = 0;
+								}
+								break;
+							}
+							else
+							{
+								MOVE move = {0};
+								move.sourcex = j;
+								move.sourcey = i;
+								move.destx = j;
+								move.desty = k;
+								move.next = 0;
+							}
+							index++;
+						}
+						k = i;
+						for(;k>=0;k--)
+						{
+							if(pchess->chess[j][k] & MASK == pchess->turn)
+							{
+								break;
+							}
+						}
+						for(;l<10;l++)
+						{
+							if(pchess->chess[l][i] & MASK == pchess->turn)
+							{
+								break;
+							}
+						}
+						l = j;
+						for(;l>=0;l--)
+						{
+							if(pchess->chess[l][i] & MASK == pchess->turn)
+							{
+								break;
+							}
+						}
+
 					}
-				}
-				k = i;
-				for(;k>=0;k--)
+				break;
+				case MA:
 				{
 				}
 				break;
-				case MA:
+				case PAO:
+				{
+				}
+				break;
+				case XIANG:
+				{
+				}
+				break;
+				case SHI:
+				{
+				}
+				break;
+				case JIANG:
+				{
+				}
+				break;
+				case BING:
+				{
+				}
 				break;
 				default:
 				;
@@ -193,7 +276,8 @@ int cleantreecoord(TREECOORD* treecoord)
 MOVELIST* nextmove(CHESS* pchess)
 {	
 	TREECOORD* treecoord = init_treecoord(1);
-	MOVETREE* movetree;
+	MOVETREE* movetree = (MOVETREE*)malloc(sizeof(MOVETREE));
+	movetree->root = NULL;
 	do
 	{
 		CHESS* pchesscur = getchessbytreecoord(pchess,movetree,treecoord);
@@ -217,8 +301,88 @@ MOVELIST* nextmove(CHESS* pchess)
 	}while(1);
 }
 
+int getchesscode(char code)
+{
+	switch(code)
+	{
+		case 'r':
+			return JU | BLACK;
+		case 'n':
+			return MA | BLACK;
+		case 'b':
+			return XIANG | BLACK;
+		case 'a':
+			return SHI | BLACK;
+		case 'k':
+			return JIANG | BLACK;
+		case 'c':
+			return PAO | BLACK;
+		case 'p':
+			return BING | BLACK;
 
+		case 'R':
+			return JU | RED;
+		case 'N':
+			return MA | RED;
+		case 'B':
+			return XIANG | RED;
+		case 'A':
+			return SHI | RED;
+		case 'K':
+			return JIANG | RED;
+		case 'C':
+			return PAO | RED;
+		case 'P':
+			return BING | RED;
+
+		default:
+			return 0;
+	}
+}
+
+CHESS* get_chess_from_fen(char* fen)
+{
+	int line = 0;
+	CHESS* pchess = (CHESS*)malloc(sizeof(CHESS));
+	char* data = fen;
+	while(line<10)
+	{
+		int i = 0;
+		int chessoffset = 0;
+		for(;;i++)
+		{
+			if(data[i] == ' ')
+				return pchess;
+			if(data[i] == '/')
+			{
+				data = data+i+1;
+				line++;
+				break;
+			}
+			else
+			{
+				if(isdigit(data[i]))
+				{
+					int it = 0;
+
+					int len = data[i] - '0';
+					for(;it<len;it++)
+					{
+						pchess->chess[i+it][line] = 0;
+					}
+					chessoffset += len-1;
+				}
+				else
+				{
+					int code = getchesscode(data[i]);
+					pchess->chess[i+chessoffset][line] = code;
+				}
+			}
+		}
+	}
+}
 int main()
 {
-	nextmove(0);
+	CHESS* pchess = get_chess_from_fen("rnbakabnr/9/1c5c1/p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RNBAKABNR ");
+	nextmove(pchess);
 }
