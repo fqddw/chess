@@ -164,6 +164,9 @@ CHESS* getchessbytreecoord(CHESS* pchess,MOVETREE* movetree,TREECOORD* treecoord
 	}
 	return pchesslast;
 }
+int is_dead(CHESS* pchess,int side)
+{
+}
 MOVELIST* get_move_list(CHESS* pchess)
 {
 	MOVELIST* movelist= (MOVELIST*)malloc(sizeof(MOVELIST));
@@ -176,7 +179,6 @@ MOVELIST* get_move_list(CHESS* pchess)
 			int mask = pchess->chess[j][i] & MASK;
 			if(mask != MASK)
 			{
-				printf("%d\n",mask);
 				continue;
 			}
 			MOVE movearray[20] = {0};
@@ -239,8 +241,9 @@ MOVELIST* get_move_list(CHESS* pchess)
 
 					}
 				break;
-				case MA:
+				case MA|MASK:
 				{
+					MOVE lefttop,leftbottom,topleft,topright,righttop,rightbottom,bottomleft,bottomright;
 				}
 				break;
 				case PAO:
@@ -249,10 +252,12 @@ MOVELIST* get_move_list(CHESS* pchess)
 				break;
 				case XIANG:
 				{
+					MOVE lefttop,leftbottom,righttop,rightbottom;
 				}
 				break;
 				case SHI:
 				{
+					MOVE lefttop,leftbottom,righttop,rightbottom;
 				}
 				break;
 				case JIANG:
@@ -261,6 +266,7 @@ MOVELIST* get_move_list(CHESS* pchess)
 				break;
 				case BING:
 				{
+					MOVE left,right,top;
 				}
 				break;
 				default:
