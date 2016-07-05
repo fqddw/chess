@@ -16,6 +16,7 @@ typedef struct _chess
 	int chess[9][10];
 	int turn:1;
 }CHESS;
+
 int calvalue()
 {
 	int i=0,j=0;
@@ -50,6 +51,13 @@ typedef struct _movetree
 {
 	MOVELIST* root;
 }MOVETREE;
+void printchess(CHESS*);
+int invalid_move(MOVE* move)
+{
+	if(move->sourcex<9 && move->sourcey<10 && move->destx<9 && move->desty<10)
+		return 1;
+	return 0;
+}
 int canmove(CHESS* pchess,MOVE* move)
 {
 }
@@ -138,9 +146,10 @@ CHESS* getchessbymove(CHESS* pchess,MOVE* move)
 	int i = move->destx;
 	int j = move->desty;
 	CHESS* newchess = copychess(pchess);
+	newchess->chess[move->sourcex][move->sourcey] = 0;
 	if(pchess->chess[i][j] == 0)
-	{
-		newchess->chess[i][j] = pchess->chess[i][j];
+	{printf(" %d %d %d\n",i,j,pchess->chess[i][j]);
+		newchess->chess[i][j] = pchess->chess[move->sourcex][move->sourcey];
 	}
 	newchess->turn == 0?1:0;
 	return newchess;
@@ -169,6 +178,7 @@ int is_dead(CHESS* pchess,int side)
 }
 MOVELIST* get_move_list(CHESS* pchess)
 {
+	MOVE possible_move[20] = {0};
 	MOVELIST* movelist= (MOVELIST*)malloc(sizeof(MOVELIST));
 	int i = 0;
 	int j = 0;
@@ -187,7 +197,7 @@ MOVELIST* get_move_list(CHESS* pchess)
 			{
 				case JU|MASK:
 					{
-						int k = i;
+						int k = i+1;
 						int l = j;
 						for(;k<10;k++)
 						{
@@ -201,6 +211,7 @@ MOVELIST* get_move_list(CHESS* pchess)
 									move.destx = j;
 									move.desty = k;
 									move.next = 0;
+									possible_move[index] = move;
 								}
 								break;
 							}
@@ -212,10 +223,12 @@ MOVELIST* get_move_list(CHESS* pchess)
 								move.destx = j;
 								move.desty = k;
 								move.next = 0;
+								possible_move[index] = move;
+								printchess(getchessbymove(pchess,&move));
 							}
 							index++;
 						}
-						k = i;
+						k = i-1;
 						for(;k>=0;k--)
 						{
 							if(pchess->chess[j][k] & MASK == pchess->turn)
@@ -244,15 +257,78 @@ MOVELIST* get_move_list(CHESS* pchess)
 				case MA|MASK:
 				{
 					MOVE lefttop,leftbottom,topleft,topright,righttop,rightbottom,bottomleft,bottomright;
+					printf("MA %d %d\n",i,j);
+					lefttop.sourcex = j;
+					lefttop.sourcey = i;
+					lefttop.destx = j - 1;
+					lefttop.desty = i - 2;
+					bottomright.sourcex = j;
+					bottomright.sourcey = i;
+					bottomright.destx = j + 1;
+					bottomright.desty = i + 2;
 				}
 				break;
-				case PAO:
+				case PAO|MASK:
 				{
+					int k = i+1;
+					int l = j;
+					int flag = 1;
+					for(;k<10;k++)
+					{
+						if(pchess->chess[j][k] != 0)
+						{
+							if(flag == 2)
+							{
+								if(pchess->turn == 0)
+									break;
+							}
+							else
+								flag = 2;
+							break;
+						}
+						else
+						{
+							if(flag == 1)
+							{
+								MOVE move = {0};
+								move.sourcex = j;
+								move.sourcey = i;
+								move.destx = j;
+								move.desty = k;
+								move.next = 0;
+								possible_move[index] = move;
+								printchess(getchessbymove(pchess,&move));
+							}
+						}
+						index++;
+					}
+
 				}
 				break;
-				case XIANG:
+				case XIANG|MASK:
 				{
 					MOVE lefttop,leftbottom,righttop,rightbottom;
+					lefttop.sourcex = i;
+					lefttop.sourcey = j;
+					lefttop.destx = i-2;
+					lefttop.desty = j-2;
+					if(invalid_move(&lefttop))
+					{
+						if(!is_dead(pchess,RED))
+						{
+						}
+					}
+					leftbottom.sourcex = j;
+					leftbottom.sourcey = i;
+					leftbottom.destx = j + 2;
+					leftbottom.desty = i + 2;
+					if(invalid_move(&leftbottom))
+					{
+						if(!is_dead(pchess,RED))
+						{
+						}
+					}
+
 				}
 				break;
 				case SHI:
@@ -260,13 +336,23 @@ MOVELIST* get_move_list(CHESS* pchess)
 					MOVE lefttop,leftbottom,righttop,rightbottom;
 				}
 				break;
-				case JIANG:
+				case JIANG|MASK:
 				{
+					MOVE left,right,top,bottom;
+					bottom.sourcex = j;
+					bottom.sourcey = i;
+					bottom.destx = j;
+					bottom.desty = i+1;
+					printchess(getchessbymove(pchess,&bottom));
 				}
 				break;
-				case BING:
+				case BING|MASK:
 				{
 					MOVE left,right,top;
+					left.sourcex = j;
+					left.sourcey = i;
+					left.destx = j - 1;
+					left.desty = i;
 				}
 				break;
 				default:
@@ -387,8 +473,21 @@ CHESS* get_chess_from_fen(char* fen)
 		}
 	}
 }
+void printchess(CHESS* pchess)
+{
+	int i = 0;
+	int j = 0;
+	for(j=0;j<10;j++)
+	{
+		for(i=0;i<9;i++)
+		{
+			printf("%5d ",pchess->chess[i][j]);
+		}
+		printf("\n");
+	}
+}
 int main()
 {
-	CHESS* pchess = get_chess_from_fen("rnbakabnr/9/1c5c1/p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RNBAKABNR ");
+	CHESS* pchess = get_chess_from_fen("rnbakabnr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RNBAKABNR ");
 	nextmove(pchess);
 }
