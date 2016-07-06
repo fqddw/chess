@@ -147,8 +147,8 @@ CHESS* getchessbymove(CHESS* pchess,MOVE* move)
 	int j = move->desty;
 	CHESS* newchess = copychess(pchess);
 	newchess->chess[move->sourcex][move->sourcey] = 0;
-	if(pchess->chess[i][j] == 0)
-	{printf(" %d %d %d\n",i,j,pchess->chess[i][j]);
+	//if(pchess->chess[i][j] == 0)
+	{
 		newchess->chess[i][j] = pchess->chess[move->sourcex][move->sourcey];
 	}
 	newchess->turn == BLACK?RED:BLACK;
@@ -198,11 +198,6 @@ MOVELIST* get_move_list(CHESS* pchess)
 			{
 				case JU:
 					{
-						if((pchess->chess[j][i] & MASK) != pchess->turn)
-						{
-							printf("%d %d\n",(pchess->chess[j][i] & MASK),pchess->turn);
-							continue;
-						}
 						int k = i+1;
 						int l = j;
 						for(;k<10;k++)
@@ -259,7 +254,7 @@ MOVELIST* get_move_list(CHESS* pchess)
 
 					}
 				break;
-				case MA|MASK:
+				case MA:
 				{
 					MOVE lefttop,leftbottom,topleft,topright,righttop,rightbottom,bottomleft,bottomright;
 					lefttop.sourcex = j;
@@ -283,12 +278,27 @@ MOVELIST* get_move_list(CHESS* pchess)
 						{
 							if(flag == 2)
 							{
-								if(pchess->turn == 0)
+								if(pchess->turn == (pchess->chess[j][k]&MASK))
+								{
+									printf("%d--\n",pchess->chess[j][k]);
 									break;
+								}
+								else
+								{
+									printf("%d\n",pchess->chess[j][k]);
+									MOVE move = {0};
+									move.sourcex = j;
+									move.sourcey = i;
+									move.destx = j;
+									move.desty = k;
+									move.next = 0;
+									possible_move[index] = move;
+									printchess(getchessbymove(pchess,&move));
+									break;
+								}
 							}
 							else
 								flag = 2;
-							break;
 						}
 						else
 						{
@@ -301,7 +311,6 @@ MOVELIST* get_move_list(CHESS* pchess)
 								move.desty = k;
 								move.next = 0;
 								possible_move[index] = move;
-								printchess(getchessbymove(pchess,&move));
 							}
 						}
 						index++;
@@ -309,7 +318,7 @@ MOVELIST* get_move_list(CHESS* pchess)
 
 				}
 				break;
-				case XIANG|MASK:
+				case XIANG:
 				{
 					MOVE lefttop,leftbottom,righttop,rightbottom;
 					lefttop.sourcex = i;
@@ -340,7 +349,7 @@ MOVELIST* get_move_list(CHESS* pchess)
 					MOVE lefttop,leftbottom,righttop,rightbottom;
 				}
 				break;
-				case JIANG|MASK:
+				case JIANG:
 				{
 					MOVE left,right,top,bottom;
 					bottom.sourcex = j;
@@ -349,7 +358,7 @@ MOVELIST* get_move_list(CHESS* pchess)
 					bottom.desty = i+1;
 				}
 				break;
-				case BING|MASK:
+				case BING:
 				{
 					MOVE left,right,top;
 					left.sourcex = j;
