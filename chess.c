@@ -14,7 +14,7 @@ struct _move_list;
 typedef struct _chess
 {
 	int chess[9][10];
-	int turn:1;
+	int turn;
 }CHESS;
 
 int calvalue()
@@ -151,7 +151,7 @@ CHESS* getchessbymove(CHESS* pchess,MOVE* move)
 	{printf(" %d %d %d\n",i,j,pchess->chess[i][j]);
 		newchess->chess[i][j] = pchess->chess[move->sourcex][move->sourcey];
 	}
-	newchess->turn == 0?1:0;
+	newchess->turn == BLACK?RED:BLACK;
 	return newchess;
 }
 
@@ -186,17 +186,23 @@ MOVELIST* get_move_list(CHESS* pchess)
 	{
 		for(j=0;j<9;j++)
 		{
-			int mask = pchess->chess[j][i] & MASK;
-			if(mask != MASK)
+			MOVE movearray[20] = {0};
+			int index = 0;
+			int item = 0;
+			if((pchess->chess[j][i] & MASK) != pchess->turn || pchess->chess[j][i] == 0)
 			{
 				continue;
 			}
-			MOVE movearray[20] = {0};
-			int index = 0;
-			switch(pchess->chess[j][i])
+
+			switch(pchess->chess[j][i] &~MASK)
 			{
-				case JU|MASK:
+				case JU:
 					{
+						if((pchess->chess[j][i] & MASK) != pchess->turn)
+						{
+							printf("%d %d\n",(pchess->chess[j][i] & MASK),pchess->turn);
+							continue;
+						}
 						int k = i+1;
 						int l = j;
 						for(;k<10;k++)
@@ -224,7 +230,6 @@ MOVELIST* get_move_list(CHESS* pchess)
 								move.desty = k;
 								move.next = 0;
 								possible_move[index] = move;
-								printchess(getchessbymove(pchess,&move));
 							}
 							index++;
 						}
@@ -257,7 +262,6 @@ MOVELIST* get_move_list(CHESS* pchess)
 				case MA|MASK:
 				{
 					MOVE lefttop,leftbottom,topleft,topright,righttop,rightbottom,bottomleft,bottomright;
-					printf("MA %d %d\n",i,j);
 					lefttop.sourcex = j;
 					lefttop.sourcey = i;
 					lefttop.destx = j - 1;
@@ -268,7 +272,7 @@ MOVELIST* get_move_list(CHESS* pchess)
 					bottomright.desty = i + 2;
 				}
 				break;
-				case PAO|MASK:
+				case PAO:
 				{
 					int k = i+1;
 					int l = j;
@@ -343,7 +347,6 @@ MOVELIST* get_move_list(CHESS* pchess)
 					bottom.sourcey = i;
 					bottom.destx = j;
 					bottom.desty = i+1;
-					printchess(getchessbymove(pchess,&bottom));
 				}
 				break;
 				case BING|MASK:
@@ -488,6 +491,6 @@ void printchess(CHESS* pchess)
 }
 int main()
 {
-	CHESS* pchess = get_chess_from_fen("rnbakabnr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RNBAKABNR ");
+	CHESS* pchess = get_chess_from_fen("RNBAKABNR/9/1C5C1/P1P1P1P1P/9/9/p1p1p1p1p/1c5c1/9/rnbakabnr ");
 	nextmove(pchess);
 }
