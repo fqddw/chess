@@ -1,5 +1,6 @@
 #include "stdlib.h"
 #include "stdio.h"
+#include "string.h"
 #define JU 0x1
 #define MA (0x1<<1)
 #define XIANG (0x1<<2)
@@ -93,6 +94,7 @@ int incr(MOVETREE* movetree,TREECOORD* treecoord)
 	int i = 0;
 	for(;i<treecoord->depth;i++)
 	{
+		printf("index %d\n",treecoord->index[treecoord->depth-i].size);
 		if(treecoord->index[treecoord->depth-i].size == 0)
 		{
 			getmovetreesize(movetree,treecoord);
@@ -119,8 +121,18 @@ int is_end(TREECOORD* treecoord)
 
 }
 
-int append_to_move_tree(MOVETREE* movetree,TREECOORD* treecoord,MOVE* move)
+int append_to_move_tree(MOVETREE* movetree,TREECOORD* treecoord,MOVELIST* lmovelist)
 {
+	int i = 0;
+	MOVELIST* movelist = movetree->root;
+	MOVELIST** needlist = 0;
+	for(i=0;i<treecoord->depth;i++)
+	{
+		needlist = &(movelist->move_list+i)->next;
+		movelist = *needlist;
+	}
+	*needlist = lmovelist;
+	return 0;
 }
 int clearchess(CHESS* pchess)
 {
@@ -176,10 +188,22 @@ CHESS* getchessbytreecoord(CHESS* pchess,MOVETREE* movetree,TREECOORD* treecoord
 int is_dead(CHESS* pchess,int side)
 {
 }
+int append_movelist(MOVELIST* movelist,MOVE* move)
+{
+	int count = movelist->count;
+	movelist->count+=1;
+	MOVE* new_movelist = (MOVE*)malloc(movelist->count*sizeof(MOVE));
+	if(count!=0)
+		memcpy(new_movelist,movelist->move_list,count*sizeof(MOVE));
+	memcpy(new_movelist+count*sizeof(MOVE),move,sizeof(MOVE));
+	movelist->move_list = new_movelist;
+	return 1;
+}
 MOVELIST* get_move_list(CHESS* pchess)
 {
-	MOVE possible_move[20] = {0};
 	MOVELIST* movelist= (MOVELIST*)malloc(sizeof(MOVELIST));
+	movelist->count = 0;
+	movelist->move_list = 0;
 	int i = 0;
 	int j = 0;
 	for(;i<10;i++)
@@ -212,7 +236,7 @@ MOVELIST* get_move_list(CHESS* pchess)
 									move.destx = j;
 									move.desty = k;
 									move.next = 0;
-									possible_move[index] = move;
+									append_movelist(movelist,&move);
 								}
 								break;
 							}
@@ -224,7 +248,6 @@ MOVELIST* get_move_list(CHESS* pchess)
 								move.destx = j;
 								move.desty = k;
 								move.next = 0;
-								possible_move[index] = move;
 							}
 							index++;
 						}
@@ -280,20 +303,18 @@ MOVELIST* get_move_list(CHESS* pchess)
 							{
 								if(pchess->turn == (pchess->chess[j][k]&MASK))
 								{
-									printf("%d--\n",pchess->chess[j][k]);
 									break;
 								}
 								else
 								{
-									printf("%d\n",pchess->chess[j][k]);
 									MOVE move = {0};
 									move.sourcex = j;
 									move.sourcey = i;
 									move.destx = j;
 									move.desty = k;
 									move.next = 0;
-									possible_move[index] = move;
-									printchess(getchessbymove(pchess,&move));
+									append_movelist(movelist,&move);
+									//printchess(getchessbymove(pchess,&move));
 									break;
 								}
 							}
@@ -310,7 +331,6 @@ MOVELIST* get_move_list(CHESS* pchess)
 								move.destx = j;
 								move.desty = k;
 								move.next = 0;
-								possible_move[index] = move;
 							}
 						}
 						index++;
@@ -372,11 +392,13 @@ MOVELIST* get_move_list(CHESS* pchess)
 			}
 		}
 	}
+	return movelist;
 }
 int cleantreecoord(TREECOORD* treecoord)
 {
 	free(treecoord);
 }
+
 MOVELIST* nextmove(CHESS* pchess)
 {	
 	TREECOORD* treecoord = init_treecoord(1);
@@ -387,20 +409,28 @@ MOVELIST* nextmove(CHESS* pchess)
 		CHESS* pchesscur = getchessbytreecoord(pchess,movetree,treecoord);
 		MOVELIST* list_ptr = get_move_list(pchesscur);
 		int i = 0;
+		MOVELIST* avaiable_list = (MOVELIST*)malloc(sizeof(MOVELIST));
+		avaiable_list->count = 0;
+		avaiable_list->move_list = 0;
 		for(;i<list_ptr->count;i++)
 		{
 			CHESS* new_chess = getchessbymove(pchesscur,list_ptr->move_list+i);
 			if(calvalue()> -1000)
 			{
-				append_to_move_tree(movetree,treecoord,list_ptr->move_list+i);
+				append_movelist(avaiable_list,list_ptr->move_list+i);
 			}
 		}
+		if(!movetree->root)
+			movetree->root = avaiable_list;
 		incr(movetree,treecoord);
 		if(is_end(treecoord))
 		{
 			TREECOORD* newtreecoord = init_treecoord(treecoord->depth+1);
 			cleantreecoord(treecoord);
 			treecoord = newtreecoord;
+		}
+		else
+		{
 		}
 	}while(1);
 }
@@ -496,6 +526,19 @@ void printchess(CHESS* pchess)
 			printf("%5d ",pchess->chess[i][j]);
 		}
 		printf("\n");
+	}
+}
+
+char* to_fen_string(CHESS* pchess)
+{
+	int i = 0;
+	int j = 0;
+	for(;j<10;j++)
+	{
+		for(i=0;i<9;i++)
+		{
+			pchess->chess[i][j];
+		}
 	}
 }
 int main()
