@@ -897,6 +897,16 @@ CHESS* get_chess_from_fen(char* fen)
 {
 	int line = 0;
 	CHESS* pchess = (CHESS*)malloc(sizeof(CHESS));
+	pchess->turn = RED;
+	int i = 0;
+	int j = 0;
+	for(i=0;i<9;i++)
+	{
+		for(j=0;j<10;j++)
+		{
+			pchess->chess[i][j] = 0;
+		}
+	}
 	char* data = fen;
 	while(line<10)
 	{
