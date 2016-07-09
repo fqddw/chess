@@ -87,6 +87,7 @@ int invalid_move(int x,int y)
 }
 int canmove(CHESS* pchess,MOVE* move)
 {
+	return 0;
 }
 TREECOORD* init_treecoord(int depth)
 {
@@ -146,6 +147,7 @@ int incr(MOVETREE* movetree,TREECOORD* treecoord)
 			}
 		}
 	}
+	return 0;
 }
 
 int is_end(TREECOORD* treecoord)
@@ -175,6 +177,7 @@ int append_to_move_tree(MOVETREE* movetree,TREECOORD* treecoord,MOVELIST* lmovel
 int clearchess(CHESS* pchess)
 {
 	free(pchess);
+	return 0;
 }
 CHESS* copychess(CHESS* pchess)
 {
@@ -236,6 +239,7 @@ CHESS* getchessbytreecoord(CHESS* pchess,MOVETREE* movetree,TREECOORD* treecoord
 }
 int is_dead(CHESS* pchess,int side)
 {
+	return 0;
 }
 int append_movelist(MOVELIST* movelist,MOVE* move)
 {
@@ -792,6 +796,7 @@ int cleantreecoord(TREECOORD* treecoord)
 	if(treecoord->index)
 		free(treecoord->index);
 	free(treecoord);
+	return 0;
 }
 
 MOVELIST* nextmove(CHESS* pchess)
@@ -928,6 +933,7 @@ CHESS* get_chess_from_fen(char* fen)
 			}
 		}
 	}
+	return pchess;
 }
 void printchess(CHESS* pchess)
 {
@@ -961,6 +967,7 @@ char* to_fen_string(CHESS* pchess)
 			}
 		}
 	}
+	return 0;
 }
 int main()
 {
