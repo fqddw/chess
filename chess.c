@@ -18,21 +18,48 @@ typedef struct _chess
 	int turn;
 }CHESS;
 
+int getweightbyitem(int item)
+{
+	switch(item)
+	{
+		case JU:
+			return 1000;
+		case JU|MASK:
+			return -1000;
+		case MA:
+			return 430;
+		case MA|MASK:
+			return -430;
+		case PAO:
+			return 450;
+		case PAO|MASK:
+			return -450;
+		case XIANG:
+			return 200;
+		case XIANG|MASK:
+			return -200;
+		case SHI:
+			return 200;
+		case SHI|MASK:
+			return -200;
+	default:
+			return 0;
+	}
+	return 0;
+}
 int calvalue(CHESS* pchess)
 {
 	int count = 0;
 	int i=0,j=0;
-	/*for(i=0;i<9;i++)
+	int score = 0;
+	for(i=0;i<9;i++)
 	{
 		for(j=0;j<10;j++)
 		{
-			if(pchess->chess[i][j] !=0)
-			{
-				count++;
-			}
+			score += getweightbyitem(pchess->chess[i][j]);
 		}
-	}*/
-	return 0;
+	}
+	return score;
 }
 
 typedef struct _move
@@ -208,7 +235,7 @@ CHESS* getchessbymove(CHESS* pchess,MOVE* move)
 	{
 		newchess->chess[i][j] = pchess->chess[move->sourcex][move->sourcey];
 	}
-	newchess->turn == BLACK?RED:BLACK;
+	newchess->turn = newchess->turn == BLACK?RED:BLACK;
 	return newchess;
 }
 
@@ -798,7 +825,7 @@ int cleantreecoord(TREECOORD* treecoord)
 	free(treecoord);
 	return 0;
 }
-
+int total = 0;
 MOVELIST* nextmove(CHESS* pchess)
 {	
 	int count = 0;
@@ -807,6 +834,7 @@ MOVELIST* nextmove(CHESS* pchess)
 	movetree->root = NULL;
 	do
 	{
+		total++;
 		CHESS* pchesscur = getchessbytreecoord(pchess,movetree,treecoord);
 		MOVELIST* list_ptr = get_move_list(pchesscur);
 		if(list_ptr->count == 0)
@@ -820,9 +848,12 @@ MOVELIST* nextmove(CHESS* pchess)
 		available_list->move_list = 0;
 		for(;i<list_ptr->count;i++)
 		{
+			if(i>1)
+				break;
 			MOVE* move = list_ptr->move_list+i;
 			CHESS* new_chess = getchessbymove(pchesscur,move);
-			if(calvalue(new_chess)> -1000)
+			int score = calvalue(new_chess);
+			if(score > -2000)
 			{
 				append_movelist(available_list,move);
 			}
@@ -843,7 +874,7 @@ MOVELIST* nextmove(CHESS* pchess)
 			cleantreecoord(treecoord);
 			treecoord = newtreecoord;
 			getmovetreesize(movetree,treecoord);
-			printf("TotalCount %d\n",count);
+			printf("TotalCount %d %d\n",treecoord->depth-1,count);
 			count = 0;
 		}
 		else
@@ -976,6 +1007,32 @@ char* to_fen_string(CHESS* pchess)
 			{
 			}
 		}
+	}
+	return 0;
+}
+int countrev = 0;
+int depthrev = 5;
+int nextmoverev(CHESS* pchess)
+{
+	total++;
+	if(total>depthrev)
+		return 0;
+	countrev++;
+/*	if(total == 1)
+		depthrev++;
+*/
+	CHESS* pchesscur = pchess;
+	MOVELIST* movelist = get_move_list(pchesscur);
+	int i = 0;
+	for(i=0;i<movelist->count;i++)
+	{
+		CHESS* pchessnow = getchessbymove(pchesscur,movelist->move_list+i);
+		if(calvalue(pchessnow)>-2000)
+		{
+		}
+		nextmoverev(pchessnow);
+		total--;
+		free(pchessnow);
 	}
 	return 0;
 }
