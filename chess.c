@@ -74,6 +74,7 @@ typedef struct _index
 {
 	int size;
 	int index;
+	int score;
 }INDEX;
 
 typedef struct _move_list
@@ -722,7 +723,8 @@ MOVELIST* get_move_list(CHESS* pchess)
 					{
 						if(i-1>=7 && i-1<=9 && j-1 >=3 && j-1<=5)
 						{
-							append_movelist(movelist,&lefttop);
+							if(pchess->chess[j-1][i-1] == 0 || pchess->chess[j-1][i-1] & MASK != pchess->turn)
+								append_movelist(movelist,&lefttop);
 						}
 					}
 
@@ -730,7 +732,8 @@ MOVELIST* get_move_list(CHESS* pchess)
 					{
 						if(i-1>=0 && i-1<=2 && j-1 >=3 && j-1<=5)
 						{
-							append_movelist(movelist,&lefttop);
+							if(pchess->chess[j-1][i-1] == 0 || pchess->chess[j-1][i-1] & MASK != pchess->turn)
+								append_movelist(movelist,&lefttop);
 						}
 					}
 					leftbottom.sourcex = j;
@@ -741,7 +744,8 @@ MOVELIST* get_move_list(CHESS* pchess)
 					{
 						if(i+1>=7 && i+1<=9 && j-1 >=3 && j-1<=5)
 						{
-							append_movelist(movelist,&leftbottom);
+							if(pchess->chess[j-1][i+1] == 0 || pchess->chess[j-1][i+1] & MASK != pchess->turn)
+								append_movelist(movelist,&leftbottom);
 						}
 					}
 
@@ -749,7 +753,8 @@ MOVELIST* get_move_list(CHESS* pchess)
 					{
 						if(i+1>=0 && i+1<=2 && j-1 >=3 && j-1<=5)
 						{
-							append_movelist(movelist,&leftbottom);
+							if(pchess->chess[j-1][i+1] == 0 || pchess->chess[j-1][i+1] & MASK != pchess->turn)
+								append_movelist(movelist,&leftbottom);
 						}
 					}
 					righttop.sourcex = j;
@@ -760,7 +765,8 @@ MOVELIST* get_move_list(CHESS* pchess)
 					{
 						if(i-1>=7 && i-1<=9 && j+1 >=3 && j+1<=5)
 						{
-							append_movelist(movelist,&righttop);
+							if(pchess->chess[j+1][i-1] == 0 || pchess->chess[j+1][i-1] & MASK != pchess->turn)
+								append_movelist(movelist,&righttop);
 						}
 					}
 
@@ -768,7 +774,8 @@ MOVELIST* get_move_list(CHESS* pchess)
 					{
 						if(i-1>=0 && i-1<=2 && j+1 >=3 && j+1<=5)
 						{
-							append_movelist(movelist,&righttop);
+							if(pchess->chess[j+1][i-1] == 0 || pchess->chess[j+1][i-1] & MASK != pchess->turn)
+								append_movelist(movelist,&righttop);
 						}
 					}
 					rightbottom.sourcex = j;
@@ -779,7 +786,8 @@ MOVELIST* get_move_list(CHESS* pchess)
 					{
 						if(i+1>=7 && i+1<=9 && j+1 >=3 && j+1<=5)
 						{
-							append_movelist(movelist,&rightbottom);
+							if(pchess->chess[j+1][i+1] == 0 || pchess->chess[j+1][i+1] & MASK != pchess->turn)
+								append_movelist(movelist,&rightbottom);
 						}
 					}
 
@@ -787,7 +795,8 @@ MOVELIST* get_move_list(CHESS* pchess)
 					{
 						if(i+1>=0 && i+1<=2 && j+1 >=3 && j+1<=5)
 						{
-							append_movelist(movelist,&rightbottom);
+							if(pchess->chess[j+1][i+1] == 0 || pchess->chess[j+1][i+1] & MASK != pchess->turn)
+								append_movelist(movelist,&rightbottom);
 						}
 					}
 
@@ -796,19 +805,96 @@ MOVELIST* get_move_list(CHESS* pchess)
 				case JIANG:
 				{
 					MOVE left,right,top,bottom;
+					top.sourcex = j;
+					top.sourcey = i;
+					top.destx = j-1;
+					top.desty = i;
+					if(pchess->turn == RED)
+					{
+						if(i+1>=0)
+							if(pchess->chess[j-1][i] == 0 || pchess->chess[j-1][i] & MASK != pchess->turn)
+								append_movelist(movelist,&top);
+					}
+					if(pchess->turn == BLACK)
+					{
+						if(i+1>=7)
+							if(pchess->chess[j-1][i] == 0 || pchess->chess[j-1][i] & MASK != pchess->turn)
+								append_movelist(movelist,&top);
+					}
+
 					bottom.sourcex = j;
 					bottom.sourcey = i;
 					bottom.destx = j;
 					bottom.desty = i+1;
+					if(pchess->turn == RED)
+					{
+						if(i+1<=2)
+							if(pchess->chess[j][i+1] == 0 || pchess->chess[j][i+1] & MASK != pchess->turn)
+								append_movelist(movelist,&bottom);
+					}
+					if(pchess->turn == BLACK)
+					{
+						if(i+1>=7 && i+1<=9)
+							if(pchess->chess[j][i+1] == 0 || pchess->chess[j][i+1] & MASK != pchess->turn)
+								append_movelist(movelist,&bottom);
+					}
+					left.sourcex = j;
+					left.sourcey = i;
+					left.destx = j-1;
+					left.desty = i;
+					if(j-1<=3)
+							if(pchess->chess[j-1][i] == 0 || pchess->chess[j-1][i] & MASK != pchess->turn)
+								append_movelist(movelist,&left);
+					right.sourcex = j;
+					right.sourcey = i;
+					right.destx = j+1;
+					right.desty = i;
+					if(j+1<=3)
+							if(pchess->chess[j-1][i] == 0 || pchess->chess[j-1][i] & MASK != pchess->turn)
+								append_movelist(movelist,&right);
+
+
 				}
 				break;
 				case BING:
 				{
-					MOVE left,right,top;
-					left.sourcex = j;
-					left.sourcey = i;
-					left.destx = j - 1;
-					left.desty = i;
+					MOVE left,right,front;
+					if((pchess->turn == BLACK && i<5) ||(pchess->turn == RED && i>4))
+					{
+						left.sourcex = j;
+						left.sourcey = i;
+						left.destx = j - 1;
+						left.desty = i;
+						if(pchess->chess[j-1][i] == 0 || pchess->chess[j-1][i] & MASK != pchess->turn)
+							append_movelist(movelist,&left);
+						right.sourcex = j;
+						right.sourcey = i;
+						right.destx = j + 1;
+						right.desty = i;
+						if(pchess->chess[j+1][i] == 0 || pchess->chess[j+1][i] & MASK != pchess->turn)
+							append_movelist(movelist,&right);
+
+					}
+
+					if(pchess->turn == BLACK)
+					{
+						front.sourcex = j;
+						front.sourcey = i;
+						front.destx = j;
+						front.desty = i-1;
+						if(pchess->chess[j][i-1] == 0 || pchess->chess[j][i-1] & MASK != pchess->turn)
+							append_movelist(movelist,&front);
+					}
+
+					if(pchess->turn == RED)
+					{
+						front.sourcex = j;
+						front.sourcey = i;
+						front.destx = j;
+						front.desty = i+1;
+						if(pchess->chess[j][i+1] == 0 || pchess->chess[j][i+1] & MASK != pchess->turn)
+							append_movelist(movelist,&front);
+					}
 				}
 				break;
 				default:
@@ -826,10 +912,12 @@ int cleantreecoord(TREECOORD* treecoord)
 	return 0;
 }
 int total = 0;
+TREECOORD * bestmove;
 MOVELIST* nextmove(CHESS* pchess)
 {	
 	int count = 0;
 	TREECOORD* treecoord = init_treecoord(0);
+	bestmove = init_treecoord(0);
 	MOVETREE* movetree = (MOVETREE*)malloc(sizeof(MOVETREE));
 	movetree->root = NULL;
 	do
@@ -848,11 +936,28 @@ MOVELIST* nextmove(CHESS* pchess)
 		available_list->move_list = 0;
 		for(;i<list_ptr->count;i++)
 		{
-			if(i>1)
-				break;
 			MOVE* move = list_ptr->move_list+i;
 			CHESS* new_chess = getchessbymove(pchesscur,move);
 			int score = calvalue(new_chess);
+			if(treecoord->depth>1)
+			if(pchesscur->turn == RED)
+			{
+				if(score > bestmove->index[treecoord->depth-1].score)
+				{
+					bestmove->index[treecoord->depth-1].score = score;
+					printf("RED score %d\n",score);
+					printchess(new_chess);
+				}
+			}
+
+			if(pchesscur->turn == BLACK)
+			{
+				if(score < bestmove->index[treecoord->depth-1].score)
+				{
+					bestmove->index[treecoord->depth-1].score = score;
+				}
+			}
+
 			if(score > -2000)
 			{
 				append_movelist(available_list,move);
@@ -871,9 +976,14 @@ MOVELIST* nextmove(CHESS* pchess)
 		if(is_end(treecoord))
 		{
 			TREECOORD* newtreecoord = init_treecoord(treecoord->depth+1);
+			TREECOORD* tmpbestmove = init_treecoord(treecoord->depth+1);
+			memcpy(tmpbestmove->index,bestmove->index,treecoord->depth*sizeof(INDEX));
+			cleantreecoord(bestmove);
+			bestmove = tmpbestmove;
 			cleantreecoord(treecoord);
 			treecoord = newtreecoord;
 			getmovetreesize(movetree,treecoord);
+			count++;
 			printf("TotalCount %d %d\n",treecoord->depth-1,count);
 			count = 0;
 		}
