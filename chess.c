@@ -132,6 +132,7 @@ TREECOORD* init_treecoord(int depth)
 	{
 		treecoord->index[i].index = 0;
 		treecoord->index[i].size = 0;
+		treecoord->index[i].score = 0;
 	}
 	return treecoord;
 }
@@ -807,18 +808,18 @@ MOVELIST* get_move_list(CHESS* pchess)
 					MOVE left,right,top,bottom;
 					top.sourcex = j;
 					top.sourcey = i;
-					top.destx = j-1;
-					top.desty = i;
+					top.destx = j;
+					top.desty = i-1;
 					if(pchess->turn == RED)
 					{
-						if(i+1>=0)
-							if(pchess->chess[j-1][i] == 0 || pchess->chess[j-1][i] & MASK != pchess->turn)
+						if(i-1>=0)
+							if(pchess->chess[j][i-1] == 0 || pchess->chess[j][i-1] & MASK != pchess->turn)
 								append_movelist(movelist,&top);
 					}
 					if(pchess->turn == BLACK)
 					{
-						if(i+1>=7)
-							if(pchess->chess[j-1][i] == 0 || pchess->chess[j-1][i] & MASK != pchess->turn)
+						if(i-1>=7)
+							if(pchess->chess[j][i-1] == 0 || pchess->chess[j][i-1] & MASK != pchess->turn)
 								append_movelist(movelist,&top);
 					}
 
@@ -842,14 +843,14 @@ MOVELIST* get_move_list(CHESS* pchess)
 					left.sourcey = i;
 					left.destx = j-1;
 					left.desty = i;
-					if(j-1<=3)
+					if(j-1>=3)
 							if(pchess->chess[j-1][i] == 0 || pchess->chess[j-1][i] & MASK != pchess->turn)
 								append_movelist(movelist,&left);
 					right.sourcex = j;
 					right.sourcey = i;
 					right.destx = j+1;
 					right.desty = i;
-					if(j+1<=3)
+					if(j+1<=5)
 							if(pchess->chess[j-1][i] == 0 || pchess->chess[j-1][i] & MASK != pchess->turn)
 								append_movelist(movelist,&right);
 
@@ -865,14 +866,16 @@ MOVELIST* get_move_list(CHESS* pchess)
 						left.sourcey = i;
 						left.destx = j - 1;
 						left.desty = i;
-						if(pchess->chess[j-1][i] == 0 || pchess->chess[j-1][i] & MASK != pchess->turn)
-							append_movelist(movelist,&left);
+						if(j-1>=0)
+							if(pchess->chess[j-1][i] == 0 || pchess->chess[j-1][i] & MASK != pchess->turn)
+								append_movelist(movelist,&left);
 						right.sourcex = j;
 						right.sourcey = i;
 						right.destx = j + 1;
 						right.desty = i;
-						if(pchess->chess[j+1][i] == 0 || pchess->chess[j+1][i] & MASK != pchess->turn)
-							append_movelist(movelist,&right);
+						if(j+1<9)
+							if(pchess->chess[j+1][i] == 0 || pchess->chess[j+1][i] & MASK != pchess->turn)
+								append_movelist(movelist,&right);
 
 					}
 
@@ -882,8 +885,9 @@ MOVELIST* get_move_list(CHESS* pchess)
 						front.sourcey = i;
 						front.destx = j;
 						front.desty = i-1;
-						if(pchess->chess[j][i-1] == 0 || pchess->chess[j][i-1] & MASK != pchess->turn)
-							append_movelist(movelist,&front);
+						if(i-1>=0)
+							if(pchess->chess[j][i-1] == 0 || pchess->chess[j][i-1] & MASK != pchess->turn)
+								append_movelist(movelist,&front);
 					}
 
 					if(pchess->turn == RED)
@@ -892,8 +896,9 @@ MOVELIST* get_move_list(CHESS* pchess)
 						front.sourcey = i;
 						front.destx = j;
 						front.desty = i+1;
-						if(pchess->chess[j][i+1] == 0 || pchess->chess[j][i+1] & MASK != pchess->turn)
-							append_movelist(movelist,&front);
+						if(i+1<10)
+							if(pchess->chess[j][i+1] == 0 || pchess->chess[j][i+1] & MASK != pchess->turn)
+								append_movelist(movelist,&front);
 					}
 				}
 				break;
@@ -936,6 +941,8 @@ MOVELIST* nextmove(CHESS* pchess)
 		available_list->move_list = 0;
 		for(;i<list_ptr->count;i++)
 		{
+			if(i>1)
+				break;
 			MOVE* move = list_ptr->move_list+i;
 			CHESS* new_chess = getchessbymove(pchesscur,move);
 			int score = calvalue(new_chess);
@@ -946,10 +953,11 @@ MOVELIST* nextmove(CHESS* pchess)
 				{
 					bestmove->index[treecoord->depth-1].score = score;
 					printf("RED score %d\n",score);
-					printchess(new_chess);
 				}
 			}
 
+			if(treecoord->depth>1)
+			printf("RED score %d\n",bestmove->index[treecoord->depth-1].score);
 			if(pchesscur->turn == BLACK)
 			{
 				if(score < bestmove->index[treecoord->depth-1].score)
