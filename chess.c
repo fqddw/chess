@@ -208,9 +208,8 @@ int clearchess(CHESS* pchess)
 	free(pchess);
 	return 0;
 }
-CHESS* copychess(CHESS* pchess)
+int copychess(CHESS* pchess,CHESS* newchess)
 {
-	CHESS* newchess = (CHESS*)malloc(sizeof(CHESS));
 	newchess->turn =pchess->turn;
 	int i = 9;
 	int j = 10;
@@ -221,9 +220,9 @@ CHESS* copychess(CHESS* pchess)
 			newchess->chess[i][j] = pchess->chess[i][j];
 		}
 	}
-	return newchess;
+	return 1;
 }
-CHESS* getchessbymove(CHESS* pchess,MOVE* move)
+int getchessbymove(CHESS* pchess,MOVE* move,CHESS* newchess)
 {
 	int i = move->destx;
 	int j = move->desty;
@@ -231,14 +230,14 @@ CHESS* getchessbymove(CHESS* pchess,MOVE* move)
 	{
 		printf("Invalid Move\n");
 	}
-	CHESS* newchess = copychess(pchess);
+	copychess(pchess,newchess);
 	newchess->chess[move->sourcex][move->sourcey] = 0;
 	//if(pchess->chess[i][j] == 0)
 	{
 		newchess->chess[i][j] = pchess->chess[move->sourcex][move->sourcey];
 	}
 	newchess->turn = newchess->turn == BLACK?RED:BLACK;
-	return newchess;
+	return 1;
 }
 
 int get_side_by_depth(int first_turn,int depth)
@@ -247,24 +246,34 @@ int get_side_by_depth(int first_turn,int depth)
 	return (flag == 0)?(first_turn == BLACK?BLACK:RED):(first_turn == BLACK?RED:BLACK);
 }
 
-CHESS* getchessbytreecoord(CHESS* pchess,MOVETREE* movetree,TREECOORD* treecoord)
+int getchessbytreecoord(CHESS* pchess,MOVETREE* movetree,TREECOORD* treecoord,CHESS* pchessresult)
 {
-	CHESS* pchesslast = copychess(pchess);
+	CHESS chesslast = {0};
+	CHESS* pchesslast = &chesslast;
+	copychess(pchess,pchesslast);
 	if(!movetree->root)
-		return pchesslast;
+	{
+		copychess(pchess,pchessresult);
+		return 1;
+	}
 	int i = 0;
 	MOVELIST* movelist = movetree->root;
 	MOVE tmpmove = {0,0,0,0,movelist};
 	MOVE* move = &tmpmove;
+	CHESS chesscur = {0};
+	CHESS* pchesscur = &chesscur;
+
 	for(;i<treecoord->depth;i++)
 	{
 		move = move->next->move_list+treecoord->index[i].index;
-		CHESS* pchesscur = getchessbymove(pchesslast,move);
-		clearchess(pchesslast);
+		getchessbymove(pchesslast,move,pchesscur);
+		CHESS* tmp = pchesslast;
 		pchesslast = pchesscur;
+		pchesscur = tmp;
 	}
 	pchesslast->turn = get_side_by_depth(pchess->turn,treecoord->depth);
-	return pchesslast;
+	copychess(pchesslast,pchessresult);
+	return 1;
 }
 int is_dead(CHESS* pchess,int side)
 {
@@ -928,7 +937,9 @@ MOVELIST* nextmove(CHESS* pchess)
 	do
 	{
 		total++;
-		CHESS* pchesscur = getchessbytreecoord(pchess,movetree,treecoord);
+		CHESS chesscur = {0};
+		CHESS* pchesscur = &chesscur;
+	       	getchessbytreecoord(pchess,movetree,treecoord,pchesscur);
 		MOVELIST* list_ptr = get_move_list(pchesscur);
 		if(list_ptr->count == 0)
 		{
@@ -941,23 +952,21 @@ MOVELIST* nextmove(CHESS* pchess)
 		available_list->move_list = 0;
 		for(;i<list_ptr->count;i++)
 		{
-			if(i>1)
-				break;
 			MOVE* move = list_ptr->move_list+i;
-			CHESS* new_chess = getchessbymove(pchesscur,move);
-			int score = calvalue(new_chess);
+			CHESS newchess = {0};
+			CHESS* pnewchess = &newchess;
+			getchessbymove(pchesscur,move,pnewchess);
+			int score = calvalue(pnewchess);
 			if(treecoord->depth>1)
 			if(pchesscur->turn == RED)
 			{
 				if(score > bestmove->index[treecoord->depth-1].score)
 				{
 					bestmove->index[treecoord->depth-1].score = score;
-					printf("RED score %d\n",score);
 				}
 			}
 
 			if(treecoord->depth>1)
-			printf("RED score %d\n",bestmove->index[treecoord->depth-1].score);
 			if(pchesscur->turn == BLACK)
 			{
 				if(score < bestmove->index[treecoord->depth-1].score)
@@ -970,11 +979,9 @@ MOVELIST* nextmove(CHESS* pchess)
 			{
 				append_movelist(available_list,move);
 			}
-			free(new_chess);
 		}
 		free(list_ptr->move_list);
 		free(list_ptr);
-		free(pchesscur);
 		if(!movetree->root)
 			movetree->root = available_list;
 		else
@@ -1144,13 +1151,14 @@ int nextmoverev(CHESS* pchess)
 	int i = 0;
 	for(i=0;i<movelist->count;i++)
 	{
-		CHESS* pchessnow = getchessbymove(pchesscur,movelist->move_list+i);
+		CHESS chessnow = {0};
+		CHESS* pchessnow = &chessnow;
+		getchessbymove(pchesscur,movelist->move_list+i,pchessnow);
 		if(calvalue(pchessnow)>-2000)
 		{
 		}
 		nextmoverev(pchessnow);
 		total--;
-		free(pchessnow);
 	}
 	return 0;
 }
