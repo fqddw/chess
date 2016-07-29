@@ -129,13 +129,7 @@ TREECOORD* init_treecoord(int depth)
 		return treecoord;
 	}
 	treecoord->index = (INDEX*)malloc(sizeof(INDEX)*depth);
-	int i = 0;
-	for(;i<depth;i++)
-	{
-		treecoord->index[i].index = 0;
-		treecoord->index[i].size = 0;
-		treecoord->index[i].score = 0;
-	}
+	memset(treecoord->index,0,depth*sizeof(INDEX));
 	return treecoord;
 }
 
@@ -283,6 +277,7 @@ int append_movelist(MOVELIST* movelist,MOVE* move,CHESS* originchess)
 		free(movelist->move_list);
 	}
 	getchessbymove(originchess,move,&move->chess);
+	calvalue(&move->chess);
 	memcpy(new_movelist+count,move,sizeof(MOVE));
 	movelist->move_list = new_movelist;
 	return 1;
@@ -930,10 +925,13 @@ MOVELIST* nextmove(CHESS* pchess)
 	bestmove = init_treecoord(0);
 	MOVETREE* movetree = (MOVETREE*)malloc(sizeof(MOVETREE));
 	movetree->root = NULL;
+	CHESS* pchesscur = pchess;
 	do
 	{
-		CHESS* pchesscur = NULL;
-	       	pchesscur = getchessbytreecoord(pchess,movetree,treecoord);
+		if(treecoord->depth>0)
+		if(treecoord->index[treecoord->depth-1].index == 0) {
+			pchesscur = getchessbytreecoord(pchess,movetree,treecoord);
+		}
 		MOVELIST* list_ptr = get_move_list(pchesscur);
 		if(list_ptr->count == 0)
 		{
@@ -996,7 +994,7 @@ MOVELIST* nextmove(CHESS* pchess)
 			count++;
 			printf("TotalCount %d %d %d %d\n",treecoord->depth-1,count,totalchesscount,total);
 			count = 0;
-			if(treecoord->depth == 17)
+			if(treecoord->depth == 10)
 				exit(0);
 		}
 		else
