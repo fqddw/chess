@@ -49,6 +49,7 @@ int getweightbyitem(int item)
 }
 int calvalue(CHESS* pchess)
 {
+	return 0;
 	int count = 0;
 	int i=0,j=0;
 	int score = 0;
@@ -68,6 +69,7 @@ typedef struct _move
 	int sourcey;
 	int destx;
 	int desty;
+	CHESS chess;
 	struct _move_list* next;
 }MOVE;
 typedef struct _index
@@ -222,8 +224,10 @@ int copychess(CHESS* pchess,CHESS* newchess)
 	}
 	return 1;
 }
+int totalchesscount = 0;
 int getchessbymove(CHESS* pchess,MOVE* move,CHESS* newchess)
 {
+	totalchesscount++;
 	int i = move->destx;
 	int j = move->desty;
 	if(pchess->chess[move->sourcex][move->sourcey] == 0)
@@ -246,40 +250,29 @@ int get_side_by_depth(int first_turn,int depth)
 	return (flag == 0)?(first_turn == BLACK?BLACK:RED):(first_turn == BLACK?RED:BLACK);
 }
 
-int getchessbytreecoord(CHESS* pchess,MOVETREE* movetree,TREECOORD* treecoord,CHESS* pchessresult)
+CHESS* getchessbytreecoord(CHESS* pchess,MOVETREE* movetree,TREECOORD* treecoord)
 {
-	CHESS chesslast = {0};
-	CHESS* pchesslast = &chesslast;
-	copychess(pchess,pchesslast);
 	if(!movetree->root)
 	{
-		copychess(pchess,pchessresult);
-		return 1;
+		return pchess;
 	}
 	int i = 0;
 	MOVELIST* movelist = movetree->root;
-	MOVE tmpmove = {0,0,0,0,movelist};
+	MOVE* nullmove = (MOVE*)0;
+	MOVE tmpmove = {0,0,0,0,*pchess,movelist};
 	MOVE* move = &tmpmove;
-	CHESS chesscur = {0};
-	CHESS* pchesscur = &chesscur;
 
 	for(;i<treecoord->depth;i++)
 	{
 		move = move->next->move_list+treecoord->index[i].index;
-		getchessbymove(pchesslast,move,pchesscur);
-		CHESS* tmp = pchesslast;
-		pchesslast = pchesscur;
-		pchesscur = tmp;
 	}
-	pchesslast->turn = get_side_by_depth(pchess->turn,treecoord->depth);
-	copychess(pchesslast,pchessresult);
-	return 1;
+	return &move->chess;
 }
 int is_dead(CHESS* pchess,int side)
 {
 	return 0;
 }
-int append_movelist(MOVELIST* movelist,MOVE* move)
+int append_movelist(MOVELIST* movelist,MOVE* move,CHESS* originchess)
 {
 	int count = movelist->count;
 	movelist->count+=1;
@@ -289,6 +282,7 @@ int append_movelist(MOVELIST* movelist,MOVE* move)
 		memcpy(new_movelist,movelist->move_list,count*sizeof(MOVE));
 		free(movelist->move_list);
 	}
+	getchessbymove(originchess,move,&move->chess);
 	memcpy(new_movelist+count,move,sizeof(MOVE));
 	movelist->move_list = new_movelist;
 	return 1;
@@ -304,6 +298,8 @@ MOVELIST* get_move_list(CHESS* pchess)
 	{
 		for(j=0;j<9;j++)
 		{
+			if(movelist->count > 3)
+				return movelist;
 			int item = 0;
 			if((pchess->chess[j][i] & MASK) != pchess->turn || pchess->chess[j][i] == 0)
 			{
@@ -328,7 +324,7 @@ MOVELIST* get_move_list(CHESS* pchess)
 									move.destx = j;
 									move.desty = k;
 									move.next = 0;
-									append_movelist(movelist,&move);
+									append_movelist(movelist,&move,pchess);
 								}
 								break;
 							}
@@ -340,7 +336,7 @@ MOVELIST* get_move_list(CHESS* pchess)
 								move.destx = j;
 								move.desty = k;
 								move.next = 0;
-								append_movelist(movelist,&move);
+								append_movelist(movelist,&move,pchess);
 							}
 						}
 						k = i-1;
@@ -356,7 +352,7 @@ MOVELIST* get_move_list(CHESS* pchess)
 									move.destx = j;
 									move.desty = k;
 									move.next = 0;
-									append_movelist(movelist,&move);
+									append_movelist(movelist,&move,pchess);
 								}
 								break;
 							}
@@ -368,7 +364,7 @@ MOVELIST* get_move_list(CHESS* pchess)
 								move.destx = j;
 								move.desty = k;
 								move.next = 0;
-								append_movelist(movelist,&move);
+								append_movelist(movelist,&move,pchess);
 							}
 						}
 
@@ -384,7 +380,7 @@ MOVELIST* get_move_list(CHESS* pchess)
 									move.destx = l;
 									move.desty = i;
 									move.next = 0;
-									append_movelist(movelist,&move);
+									append_movelist(movelist,&move,pchess);
 								}
 								break;
 							}
@@ -396,7 +392,7 @@ MOVELIST* get_move_list(CHESS* pchess)
 								move.destx = l;
 								move.desty = i;
 								move.next = 0;
-								append_movelist(movelist,&move);
+								append_movelist(movelist,&move,pchess);
 							}
 						}
 						l=j-1;
@@ -412,7 +408,7 @@ MOVELIST* get_move_list(CHESS* pchess)
 									move.destx = l;
 									move.desty = i;
 									move.next = 0;
-									append_movelist(movelist,&move);
+									append_movelist(movelist,&move,pchess);
 								}
 								break;
 							}
@@ -424,7 +420,7 @@ MOVELIST* get_move_list(CHESS* pchess)
 								move.destx = l;
 								move.desty = i;
 								move.next = 0;
-								append_movelist(movelist,&move);
+								append_movelist(movelist,&move,pchess);
 							}
 						}
 
@@ -445,7 +441,7 @@ MOVELIST* get_move_list(CHESS* pchess)
 						{
 							if(pchess->chess[j-2][i-1] == 0 || pchess->chess[j-2][i-1] & MASK != pchess->turn)
 							{
-								append_movelist(movelist,&lefttop);
+								append_movelist(movelist,&lefttop,pchess);
 							}
 						}
 					}
@@ -455,7 +451,7 @@ MOVELIST* get_move_list(CHESS* pchess)
 					if(invalid_move(j-1,i-2))
 						if(!pchess->chess[j][i-1])
 							if(pchess->chess[j-1][i-2] == 0 || pchess->chess[j-1][i-2] & MASK != pchess->turn)
-								append_movelist(movelist,&topleft);
+								append_movelist(movelist,&topleft,pchess);
 
 					move.destx = j - 2;
 					move.desty = i + 1;
@@ -463,7 +459,7 @@ MOVELIST* get_move_list(CHESS* pchess)
 					if(invalid_move(j-2,i+1))
 						if(!pchess->chess[j-1][i])
 							if(pchess->chess[j-2][i+1] ==0 || pchess->chess[j-2][i+1] & MASK != pchess->turn)
-								append_movelist(movelist,&leftbottom);
+								append_movelist(movelist,&leftbottom,pchess);
 
 					move.destx = j - 1;
 					move.desty = i + 2;
@@ -474,7 +470,7 @@ MOVELIST* get_move_list(CHESS* pchess)
 						{
 							if(pchess->chess[j-1][i+2] ==0 || pchess->chess[j-1][i+2] & MASK != pchess->turn)
 							{
-								append_movelist(movelist,&bottomleft);
+								append_movelist(movelist,&bottomleft,pchess);
 							}
 						}
 					}
@@ -485,21 +481,21 @@ MOVELIST* get_move_list(CHESS* pchess)
 					if(invalid_move(j+1,i+2))
 						if(!pchess->chess[j][i+1])
 							if(pchess->chess[j+1][i+2] == 0 || pchess->chess[j+1][i+2] & MASK != pchess->turn)
-								append_movelist(movelist,&bottomright);
+								append_movelist(movelist,&bottomright,pchess);
 					move.destx = j + 2;
 					move.desty = i + 1;
 					rightbottom = move;
 					if(invalid_move(j+2,i+1))
 						if(!pchess->chess[j+1][i])
 							if(pchess->chess[j+2][i+1] == 0 || pchess->chess[j+2][i+1] & MASK != pchess->turn)
-								append_movelist(movelist,&rightbottom);
+								append_movelist(movelist,&rightbottom,pchess);
 					move.destx = j + 2;
 					move.desty = i - 1;
 					righttop = move;
 					if(invalid_move(j+2,i-1))
 						if(!pchess->chess[j+1][i])
 							if(pchess->chess[j+2][i-1] == 0 || pchess->chess[j+2][i-1] & MASK != pchess->turn)
-								append_movelist(movelist,&righttop);					
+								append_movelist(movelist,&righttop,pchess);					
 
 					move.destx = j + 1;
 					move.desty = i - 2;
@@ -507,7 +503,7 @@ MOVELIST* get_move_list(CHESS* pchess)
 					if(invalid_move(j+1,i-2))
 						if(!pchess->chess[j][i-1])
 							if(pchess->chess[j+1][i-2] == 0 || pchess->chess[j+1][i-2] & MASK != pchess->turn)
-								append_movelist(movelist,&topright);
+								append_movelist(movelist,&topright,pchess);
 				}
 				break;
 				case PAO:
@@ -533,7 +529,7 @@ MOVELIST* get_move_list(CHESS* pchess)
 									move.destx = j;
 									move.desty = k;
 									move.next = 0;
-									append_movelist(movelist,&move);
+									append_movelist(movelist,&move,pchess);
 									break;
 								}
 							}
@@ -550,7 +546,7 @@ MOVELIST* get_move_list(CHESS* pchess)
 								move.destx = j;
 								move.desty = k;
 								move.next = 0;
-								append_movelist(movelist,&move);
+								append_movelist(movelist,&move,pchess);
 							}
 						}
 					}
@@ -574,7 +570,7 @@ MOVELIST* get_move_list(CHESS* pchess)
 									move.destx = j;
 									move.desty = k;
 									move.next = 0;
-									append_movelist(movelist,&move);
+									append_movelist(movelist,&move,pchess);
 									break;
 								}
 							}
@@ -591,7 +587,7 @@ MOVELIST* get_move_list(CHESS* pchess)
 								move.destx = j;
 								move.desty = k;
 								move.next = 0;
-								append_movelist(movelist,&move);
+								append_movelist(movelist,&move,pchess);
 							}
 						}
 					}
@@ -615,7 +611,7 @@ MOVELIST* get_move_list(CHESS* pchess)
 									move.destx = l;
 									move.desty = i;
 									move.next = 0;
-									append_movelist(movelist,&move);
+									append_movelist(movelist,&move,pchess);
 									break;
 								}
 							}
@@ -632,7 +628,7 @@ MOVELIST* get_move_list(CHESS* pchess)
 								move.destx = l;
 								move.desty = i;
 								move.next = 0;
-								append_movelist(movelist,&move);
+								append_movelist(movelist,&move,pchess);
 							}
 						}
 					}
@@ -656,7 +652,7 @@ MOVELIST* get_move_list(CHESS* pchess)
 									move.destx = l;
 									move.desty = i;
 									move.next = 0;
-									append_movelist(movelist,&move);
+									append_movelist(movelist,&move,pchess);
 									break;
 								}
 							}
@@ -673,7 +669,7 @@ MOVELIST* get_move_list(CHESS* pchess)
 								move.destx = l;
 								move.desty = i;
 								move.next = 0;
-								append_movelist(movelist,&move);
+								append_movelist(movelist,&move,pchess);
 							}
 						}
 					}
@@ -690,7 +686,7 @@ MOVELIST* get_move_list(CHESS* pchess)
 					if(invalid_move(j-2,i-2))
 					{
 						if(pchess->chess[j-2][i-2] == 0 || pchess->chess[j-2][i-2] & MASK != pchess->turn)
-							append_movelist(movelist,&lefttop);
+							append_movelist(movelist,&lefttop,pchess);
 					}
 					leftbottom.sourcex = j;
 					leftbottom.sourcey = i;
@@ -699,7 +695,7 @@ MOVELIST* get_move_list(CHESS* pchess)
 					if(invalid_move(j-2,i+2))
 					{
 						if(pchess->chess[j-2][i+2] == 0 || pchess->chess[j-2][i+2] & MASK != pchess->turn)
-							append_movelist(movelist,&leftbottom);
+							append_movelist(movelist,&leftbottom,pchess);
 					}
 					rightbottom.sourcex = j;
 					rightbottom.sourcey = i;
@@ -708,7 +704,7 @@ MOVELIST* get_move_list(CHESS* pchess)
 					if(invalid_move(j+2,i+2))
 					{
 						if(pchess->chess[j+2][i+2] == 0 || pchess->chess[j+2][i+2] & MASK != pchess->turn)
-							append_movelist(movelist,&rightbottom);
+							append_movelist(movelist,&rightbottom,pchess);
 					}
 					righttop.sourcex = j;
 					righttop.sourcey = i;
@@ -717,7 +713,7 @@ MOVELIST* get_move_list(CHESS* pchess)
 					if(invalid_move(j+2,i-2))
 					{
 						if(pchess->chess[j+2][i-2] == 0 || pchess->chess[j+2][i-2] & MASK != pchess->turn)
-							append_movelist(movelist,&righttop);
+							append_movelist(movelist,&righttop,pchess);
 					}
 
 				}
@@ -734,7 +730,7 @@ MOVELIST* get_move_list(CHESS* pchess)
 						if(i-1>=7 && i-1<=9 && j-1 >=3 && j-1<=5)
 						{
 							if(pchess->chess[j-1][i-1] == 0 || pchess->chess[j-1][i-1] & MASK != pchess->turn)
-								append_movelist(movelist,&lefttop);
+								append_movelist(movelist,&lefttop,pchess);
 						}
 					}
 
@@ -743,7 +739,7 @@ MOVELIST* get_move_list(CHESS* pchess)
 						if(i-1>=0 && i-1<=2 && j-1 >=3 && j-1<=5)
 						{
 							if(pchess->chess[j-1][i-1] == 0 || pchess->chess[j-1][i-1] & MASK != pchess->turn)
-								append_movelist(movelist,&lefttop);
+								append_movelist(movelist,&lefttop,pchess);
 						}
 					}
 					leftbottom.sourcex = j;
@@ -755,7 +751,7 @@ MOVELIST* get_move_list(CHESS* pchess)
 						if(i+1>=7 && i+1<=9 && j-1 >=3 && j-1<=5)
 						{
 							if(pchess->chess[j-1][i+1] == 0 || pchess->chess[j-1][i+1] & MASK != pchess->turn)
-								append_movelist(movelist,&leftbottom);
+								append_movelist(movelist,&leftbottom,pchess);
 						}
 					}
 
@@ -764,7 +760,7 @@ MOVELIST* get_move_list(CHESS* pchess)
 						if(i+1>=0 && i+1<=2 && j-1 >=3 && j-1<=5)
 						{
 							if(pchess->chess[j-1][i+1] == 0 || pchess->chess[j-1][i+1] & MASK != pchess->turn)
-								append_movelist(movelist,&leftbottom);
+								append_movelist(movelist,&leftbottom,pchess);
 						}
 					}
 					righttop.sourcex = j;
@@ -776,7 +772,7 @@ MOVELIST* get_move_list(CHESS* pchess)
 						if(i-1>=7 && i-1<=9 && j+1 >=3 && j+1<=5)
 						{
 							if(pchess->chess[j+1][i-1] == 0 || pchess->chess[j+1][i-1] & MASK != pchess->turn)
-								append_movelist(movelist,&righttop);
+								append_movelist(movelist,&righttop,pchess);
 						}
 					}
 
@@ -785,7 +781,7 @@ MOVELIST* get_move_list(CHESS* pchess)
 						if(i-1>=0 && i-1<=2 && j+1 >=3 && j+1<=5)
 						{
 							if(pchess->chess[j+1][i-1] == 0 || pchess->chess[j+1][i-1] & MASK != pchess->turn)
-								append_movelist(movelist,&righttop);
+								append_movelist(movelist,&righttop,pchess);
 						}
 					}
 					rightbottom.sourcex = j;
@@ -797,7 +793,7 @@ MOVELIST* get_move_list(CHESS* pchess)
 						if(i+1>=7 && i+1<=9 && j+1 >=3 && j+1<=5)
 						{
 							if(pchess->chess[j+1][i+1] == 0 || pchess->chess[j+1][i+1] & MASK != pchess->turn)
-								append_movelist(movelist,&rightbottom);
+								append_movelist(movelist,&rightbottom,pchess);
 						}
 					}
 
@@ -806,7 +802,7 @@ MOVELIST* get_move_list(CHESS* pchess)
 						if(i+1>=0 && i+1<=2 && j+1 >=3 && j+1<=5)
 						{
 							if(pchess->chess[j+1][i+1] == 0 || pchess->chess[j+1][i+1] & MASK != pchess->turn)
-								append_movelist(movelist,&rightbottom);
+								append_movelist(movelist,&rightbottom,pchess);
 						}
 					}
 
@@ -823,13 +819,13 @@ MOVELIST* get_move_list(CHESS* pchess)
 					{
 						if(i-1>=0)
 							if(pchess->chess[j][i-1] == 0 || pchess->chess[j][i-1] & MASK != pchess->turn)
-								append_movelist(movelist,&top);
+								append_movelist(movelist,&top,pchess);
 					}
 					if(pchess->turn == BLACK)
 					{
 						if(i-1>=7)
 							if(pchess->chess[j][i-1] == 0 || pchess->chess[j][i-1] & MASK != pchess->turn)
-								append_movelist(movelist,&top);
+								append_movelist(movelist,&top,pchess);
 					}
 
 					bottom.sourcex = j;
@@ -840,13 +836,13 @@ MOVELIST* get_move_list(CHESS* pchess)
 					{
 						if(i+1<=2)
 							if(pchess->chess[j][i+1] == 0 || pchess->chess[j][i+1] & MASK != pchess->turn)
-								append_movelist(movelist,&bottom);
+								append_movelist(movelist,&bottom,pchess);
 					}
 					if(pchess->turn == BLACK)
 					{
 						if(i+1>=7 && i+1<=9)
 							if(pchess->chess[j][i+1] == 0 || pchess->chess[j][i+1] & MASK != pchess->turn)
-								append_movelist(movelist,&bottom);
+								append_movelist(movelist,&bottom,pchess);
 					}
 					left.sourcex = j;
 					left.sourcey = i;
@@ -854,14 +850,14 @@ MOVELIST* get_move_list(CHESS* pchess)
 					left.desty = i;
 					if(j-1>=3)
 							if(pchess->chess[j-1][i] == 0 || pchess->chess[j-1][i] & MASK != pchess->turn)
-								append_movelist(movelist,&left);
+								append_movelist(movelist,&left,pchess);
 					right.sourcex = j;
 					right.sourcey = i;
 					right.destx = j+1;
 					right.desty = i;
 					if(j+1<=5)
 							if(pchess->chess[j-1][i] == 0 || pchess->chess[j-1][i] & MASK != pchess->turn)
-								append_movelist(movelist,&right);
+								append_movelist(movelist,&right,pchess);
 
 
 				}
@@ -877,14 +873,14 @@ MOVELIST* get_move_list(CHESS* pchess)
 						left.desty = i;
 						if(j-1>=0)
 							if(pchess->chess[j-1][i] == 0 || pchess->chess[j-1][i] & MASK != pchess->turn)
-								append_movelist(movelist,&left);
+								append_movelist(movelist,&left,pchess);
 						right.sourcex = j;
 						right.sourcey = i;
 						right.destx = j + 1;
 						right.desty = i;
 						if(j+1<9)
 							if(pchess->chess[j+1][i] == 0 || pchess->chess[j+1][i] & MASK != pchess->turn)
-								append_movelist(movelist,&right);
+								append_movelist(movelist,&right,pchess);
 
 					}
 
@@ -896,7 +892,7 @@ MOVELIST* get_move_list(CHESS* pchess)
 						front.desty = i-1;
 						if(i-1>=0)
 							if(pchess->chess[j][i-1] == 0 || pchess->chess[j][i-1] & MASK != pchess->turn)
-								append_movelist(movelist,&front);
+								append_movelist(movelist,&front,pchess);
 					}
 
 					if(pchess->turn == RED)
@@ -907,7 +903,7 @@ MOVELIST* get_move_list(CHESS* pchess)
 						front.desty = i+1;
 						if(i+1<10)
 							if(pchess->chess[j][i+1] == 0 || pchess->chess[j][i+1] & MASK != pchess->turn)
-								append_movelist(movelist,&front);
+								append_movelist(movelist,&front,pchess);
 					}
 				}
 				break;
@@ -936,10 +932,8 @@ MOVELIST* nextmove(CHESS* pchess)
 	movetree->root = NULL;
 	do
 	{
-		total++;
-		CHESS chesscur = {0};
-		CHESS* pchesscur = &chesscur;
-	       	getchessbytreecoord(pchess,movetree,treecoord,pchesscur);
+		CHESS* pchesscur = NULL;
+	       	pchesscur = getchessbytreecoord(pchess,movetree,treecoord);
 		MOVELIST* list_ptr = get_move_list(pchesscur);
 		if(list_ptr->count == 0)
 		{
@@ -947,7 +941,8 @@ MOVELIST* nextmove(CHESS* pchess)
 			return 0;
 		}
 		int i = 0;
-		MOVELIST* available_list = (MOVELIST*)malloc(sizeof(MOVELIST));
+		total+=list_ptr->count;
+		MOVELIST* available_list = list_ptr;/*(MOVELIST*)malloc(sizeof(MOVELIST));
 		available_list->count = 0;
 		available_list->move_list = 0;
 		for(;i<list_ptr->count;i++)
@@ -981,7 +976,7 @@ MOVELIST* nextmove(CHESS* pchess)
 			}
 		}
 		free(list_ptr->move_list);
-		free(list_ptr);
+		free(list_ptr);*/
 		if(!movetree->root)
 			movetree->root = available_list;
 		else
@@ -999,8 +994,10 @@ MOVELIST* nextmove(CHESS* pchess)
 			treecoord = newtreecoord;
 			getmovetreesize(movetree,treecoord);
 			count++;
-			printf("TotalCount %d %d\n",treecoord->depth-1,count);
+			printf("TotalCount %d %d %d %d\n",treecoord->depth-1,count,totalchesscount,total);
 			count = 0;
+			if(treecoord->depth == 17)
+				exit(0);
 		}
 		else
 		{
