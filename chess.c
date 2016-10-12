@@ -253,7 +253,10 @@ CHESS* getchessbytreecoord(CHESS* pchess,MOVETREE* movetree,TREECOORD* treecoord
 	int i = 0;
 	MOVELIST* movelist = movetree->root;
 	MOVE* nullmove = (MOVE*)0;
-	MOVE tmpmove = {0,0,0,0,*pchess,movelist};
+	MOVE tmpmove = {0};
+	memset(&tmpmove,0,sizeof(MOVE));
+	tmpmove.chess = *pchess;
+	tmpmove.next = movelist;
 	MOVE* move = &tmpmove;
 
 	for(;i<treecoord->depth;i++)
@@ -293,8 +296,6 @@ MOVELIST* get_move_list(CHESS* pchess)
 	{
 		for(j=0;j<9;j++)
 		{
-			if(movelist->count > 3)
-				return movelist;
 			int item = 0;
 			if((pchess->chess[j][i] & MASK) != pchess->turn || pchess->chess[j][i] == 0)
 			{
@@ -434,7 +435,7 @@ MOVELIST* get_move_list(CHESS* pchess)
 					{
 						if(!pchess->chess[j-1][i])
 						{
-							if(pchess->chess[j-2][i-1] == 0 || pchess->chess[j-2][i-1] & MASK != pchess->turn)
+							if(pchess->chess[j-2][i-1] == 0 || (pchess->chess[j-2][i-1] & MASK) != pchess->turn)
 							{
 								append_movelist(movelist,&lefttop,pchess);
 							}
@@ -445,7 +446,7 @@ MOVELIST* get_move_list(CHESS* pchess)
 					topleft = move;
 					if(invalid_move(j-1,i-2))
 						if(!pchess->chess[j][i-1])
-							if(pchess->chess[j-1][i-2] == 0 || pchess->chess[j-1][i-2] & MASK != pchess->turn)
+							if(pchess->chess[j-1][i-2] == 0 || (pchess->chess[j-1][i-2] & MASK) != pchess->turn)
 								append_movelist(movelist,&topleft,pchess);
 
 					move.destx = j - 2;
@@ -453,7 +454,7 @@ MOVELIST* get_move_list(CHESS* pchess)
 					leftbottom = move;
 					if(invalid_move(j-2,i+1))
 						if(!pchess->chess[j-1][i])
-							if(pchess->chess[j-2][i+1] ==0 || pchess->chess[j-2][i+1] & MASK != pchess->turn)
+							if(pchess->chess[j-2][i+1] ==0 || (pchess->chess[j-2][i+1] & MASK) != pchess->turn)
 								append_movelist(movelist,&leftbottom,pchess);
 
 					move.destx = j - 1;
@@ -463,7 +464,7 @@ MOVELIST* get_move_list(CHESS* pchess)
 					{
 						if(!pchess->chess[j][i+1])
 						{
-							if(pchess->chess[j-1][i+2] ==0 || pchess->chess[j-1][i+2] & MASK != pchess->turn)
+							if(pchess->chess[j-1][i+2] ==0 || (pchess->chess[j-1][i+2] & MASK) != pchess->turn)
 							{
 								append_movelist(movelist,&bottomleft,pchess);
 							}
@@ -475,21 +476,21 @@ MOVELIST* get_move_list(CHESS* pchess)
 					bottomright = move;
 					if(invalid_move(j+1,i+2))
 						if(!pchess->chess[j][i+1])
-							if(pchess->chess[j+1][i+2] == 0 || pchess->chess[j+1][i+2] & MASK != pchess->turn)
+							if(pchess->chess[j+1][i+2] == 0 || (pchess->chess[j+1][i+2] & MASK) != pchess->turn)
 								append_movelist(movelist,&bottomright,pchess);
 					move.destx = j + 2;
 					move.desty = i + 1;
 					rightbottom = move;
 					if(invalid_move(j+2,i+1))
 						if(!pchess->chess[j+1][i])
-							if(pchess->chess[j+2][i+1] == 0 || pchess->chess[j+2][i+1] & MASK != pchess->turn)
+							if(pchess->chess[j+2][i+1] == 0 || (pchess->chess[j+2][i+1] & MASK) != pchess->turn)
 								append_movelist(movelist,&rightbottom,pchess);
 					move.destx = j + 2;
 					move.desty = i - 1;
 					righttop = move;
 					if(invalid_move(j+2,i-1))
 						if(!pchess->chess[j+1][i])
-							if(pchess->chess[j+2][i-1] == 0 || pchess->chess[j+2][i-1] & MASK != pchess->turn)
+							if(pchess->chess[j+2][i-1] == 0 || (pchess->chess[j+2][i-1] & MASK) != pchess->turn)
 								append_movelist(movelist,&righttop,pchess);					
 
 					move.destx = j + 1;
@@ -497,7 +498,7 @@ MOVELIST* get_move_list(CHESS* pchess)
 					topright = move;
 					if(invalid_move(j+1,i-2))
 						if(!pchess->chess[j][i-1])
-							if(pchess->chess[j+1][i-2] == 0 || pchess->chess[j+1][i-2] & MASK != pchess->turn)
+							if(pchess->chess[j+1][i-2] == 0 || (pchess->chess[j+1][i-2] & MASK) != pchess->turn)
 								append_movelist(movelist,&topright,pchess);
 				}
 				break;
@@ -680,7 +681,7 @@ MOVELIST* get_move_list(CHESS* pchess)
 					lefttop.destx = j-2;
 					if(invalid_move(j-2,i-2))
 					{
-						if(pchess->chess[j-2][i-2] == 0 || pchess->chess[j-2][i-2] & MASK != pchess->turn)
+						if(pchess->chess[j-2][i-2] == 0 || (pchess->chess[j-2][i-2] & MASK) != pchess->turn)
 							append_movelist(movelist,&lefttop,pchess);
 					}
 					leftbottom.sourcex = j;
@@ -689,7 +690,7 @@ MOVELIST* get_move_list(CHESS* pchess)
 					leftbottom.desty = i + 2;
 					if(invalid_move(j-2,i+2))
 					{
-						if(pchess->chess[j-2][i+2] == 0 || pchess->chess[j-2][i+2] & MASK != pchess->turn)
+						if(pchess->chess[j-2][i+2] == 0 || (pchess->chess[j-2][i+2] & MASK) != pchess->turn)
 							append_movelist(movelist,&leftbottom,pchess);
 					}
 					rightbottom.sourcex = j;
@@ -698,7 +699,7 @@ MOVELIST* get_move_list(CHESS* pchess)
 					rightbottom.desty = i + 2;
 					if(invalid_move(j+2,i+2))
 					{
-						if(pchess->chess[j+2][i+2] == 0 || pchess->chess[j+2][i+2] & MASK != pchess->turn)
+						if(pchess->chess[j+2][i+2] == 0 || (pchess->chess[j+2][i+2] & MASK) != pchess->turn)
 							append_movelist(movelist,&rightbottom,pchess);
 					}
 					righttop.sourcex = j;
@@ -707,7 +708,7 @@ MOVELIST* get_move_list(CHESS* pchess)
 					righttop.desty = i - 2;
 					if(invalid_move(j+2,i-2))
 					{
-						if(pchess->chess[j+2][i-2] == 0 || pchess->chess[j+2][i-2] & MASK != pchess->turn)
+						if(pchess->chess[j+2][i-2] == 0 || (pchess->chess[j+2][i-2] & MASK) != pchess->turn)
 							append_movelist(movelist,&righttop,pchess);
 					}
 
@@ -724,7 +725,7 @@ MOVELIST* get_move_list(CHESS* pchess)
 					{
 						if(i-1>=7 && i-1<=9 && j-1 >=3 && j-1<=5)
 						{
-							if(pchess->chess[j-1][i-1] == 0 || pchess->chess[j-1][i-1] & MASK != pchess->turn)
+							if(pchess->chess[j-1][i-1] == 0 || (pchess->chess[j-1][i-1] & MASK) != pchess->turn)
 								append_movelist(movelist,&lefttop,pchess);
 						}
 					}
@@ -733,7 +734,7 @@ MOVELIST* get_move_list(CHESS* pchess)
 					{
 						if(i-1>=0 && i-1<=2 && j-1 >=3 && j-1<=5)
 						{
-							if(pchess->chess[j-1][i-1] == 0 || pchess->chess[j-1][i-1] & MASK != pchess->turn)
+							if(pchess->chess[j-1][i-1] == 0 || (pchess->chess[j-1][i-1] & MASK) != pchess->turn)
 								append_movelist(movelist,&lefttop,pchess);
 						}
 					}
@@ -745,7 +746,7 @@ MOVELIST* get_move_list(CHESS* pchess)
 					{
 						if(i+1>=7 && i+1<=9 && j-1 >=3 && j-1<=5)
 						{
-							if(pchess->chess[j-1][i+1] == 0 || pchess->chess[j-1][i+1] & MASK != pchess->turn)
+							if(pchess->chess[j-1][i+1] == 0 || (pchess->chess[j-1][i+1] & MASK) != pchess->turn)
 								append_movelist(movelist,&leftbottom,pchess);
 						}
 					}
@@ -754,7 +755,7 @@ MOVELIST* get_move_list(CHESS* pchess)
 					{
 						if(i+1>=0 && i+1<=2 && j-1 >=3 && j-1<=5)
 						{
-							if(pchess->chess[j-1][i+1] == 0 || pchess->chess[j-1][i+1] & MASK != pchess->turn)
+							if(pchess->chess[j-1][i+1] == 0 || (pchess->chess[j-1][i+1] & MASK) != pchess->turn)
 								append_movelist(movelist,&leftbottom,pchess);
 						}
 					}
@@ -766,7 +767,7 @@ MOVELIST* get_move_list(CHESS* pchess)
 					{
 						if(i-1>=7 && i-1<=9 && j+1 >=3 && j+1<=5)
 						{
-							if(pchess->chess[j+1][i-1] == 0 || pchess->chess[j+1][i-1] & MASK != pchess->turn)
+							if(pchess->chess[j+1][i-1] == 0 || (pchess->chess[j+1][i-1] & MASK) != pchess->turn)
 								append_movelist(movelist,&righttop,pchess);
 						}
 					}
@@ -775,7 +776,7 @@ MOVELIST* get_move_list(CHESS* pchess)
 					{
 						if(i-1>=0 && i-1<=2 && j+1 >=3 && j+1<=5)
 						{
-							if(pchess->chess[j+1][i-1] == 0 || pchess->chess[j+1][i-1] & MASK != pchess->turn)
+							if(pchess->chess[j+1][i-1] == 0 || (pchess->chess[j+1][i-1] & MASK) != pchess->turn)
 								append_movelist(movelist,&righttop,pchess);
 						}
 					}
@@ -787,7 +788,7 @@ MOVELIST* get_move_list(CHESS* pchess)
 					{
 						if(i+1>=7 && i+1<=9 && j+1 >=3 && j+1<=5)
 						{
-							if(pchess->chess[j+1][i+1] == 0 || pchess->chess[j+1][i+1] & MASK != pchess->turn)
+							if(pchess->chess[j+1][i+1] == 0 || (pchess->chess[j+1][i+1] & MASK) != pchess->turn)
 								append_movelist(movelist,&rightbottom,pchess);
 						}
 					}
@@ -796,7 +797,7 @@ MOVELIST* get_move_list(CHESS* pchess)
 					{
 						if(i+1>=0 && i+1<=2 && j+1 >=3 && j+1<=5)
 						{
-							if(pchess->chess[j+1][i+1] == 0 || pchess->chess[j+1][i+1] & MASK != pchess->turn)
+							if(pchess->chess[j+1][i+1] == 0 || (pchess->chess[j+1][i+1] & MASK) != pchess->turn)
 								append_movelist(movelist,&rightbottom,pchess);
 						}
 					}
@@ -813,13 +814,13 @@ MOVELIST* get_move_list(CHESS* pchess)
 					if(pchess->turn == RED)
 					{
 						if(i-1>=0)
-							if(pchess->chess[j][i-1] == 0 || pchess->chess[j][i-1] & MASK != pchess->turn)
+							if(pchess->chess[j][i-1] == 0 || (pchess->chess[j][i-1] & MASK) != pchess->turn)
 								append_movelist(movelist,&top,pchess);
 					}
 					if(pchess->turn == BLACK)
 					{
 						if(i-1>=7)
-							if(pchess->chess[j][i-1] == 0 || pchess->chess[j][i-1] & MASK != pchess->turn)
+							if(pchess->chess[j][i-1] == 0 || (pchess->chess[j][i-1] & MASK) != pchess->turn)
 								append_movelist(movelist,&top,pchess);
 					}
 
@@ -830,13 +831,13 @@ MOVELIST* get_move_list(CHESS* pchess)
 					if(pchess->turn == RED)
 					{
 						if(i+1<=2)
-							if(pchess->chess[j][i+1] == 0 || pchess->chess[j][i+1] & MASK != pchess->turn)
+							if(pchess->chess[j][i+1] == 0 || (pchess->chess[j][i+1] & MASK) != pchess->turn)
 								append_movelist(movelist,&bottom,pchess);
 					}
 					if(pchess->turn == BLACK)
 					{
 						if(i+1>=7 && i+1<=9)
-							if(pchess->chess[j][i+1] == 0 || pchess->chess[j][i+1] & MASK != pchess->turn)
+							if(pchess->chess[j][i+1] == 0 || (pchess->chess[j][i+1] & MASK) != pchess->turn)
 								append_movelist(movelist,&bottom,pchess);
 					}
 					left.sourcex = j;
@@ -844,14 +845,14 @@ MOVELIST* get_move_list(CHESS* pchess)
 					left.destx = j-1;
 					left.desty = i;
 					if(j-1>=3)
-							if(pchess->chess[j-1][i] == 0 || pchess->chess[j-1][i] & MASK != pchess->turn)
+							if(pchess->chess[j-1][i] == 0 || (pchess->chess[j-1][i] & MASK) != pchess->turn)
 								append_movelist(movelist,&left,pchess);
 					right.sourcex = j;
 					right.sourcey = i;
 					right.destx = j+1;
 					right.desty = i;
 					if(j+1<=5)
-							if(pchess->chess[j-1][i] == 0 || pchess->chess[j-1][i] & MASK != pchess->turn)
+							if(pchess->chess[j-1][i] == 0 || (pchess->chess[j-1][i] & MASK) != pchess->turn)
 								append_movelist(movelist,&right,pchess);
 
 
@@ -867,14 +868,14 @@ MOVELIST* get_move_list(CHESS* pchess)
 						left.destx = j - 1;
 						left.desty = i;
 						if(j-1>=0)
-							if(pchess->chess[j-1][i] == 0 || pchess->chess[j-1][i] & MASK != pchess->turn)
+							if(pchess->chess[j-1][i] == 0 || (pchess->chess[j-1][i] & MASK) != pchess->turn)
 								append_movelist(movelist,&left,pchess);
 						right.sourcex = j;
 						right.sourcey = i;
 						right.destx = j + 1;
 						right.desty = i;
 						if(j+1<9)
-							if(pchess->chess[j+1][i] == 0 || pchess->chess[j+1][i] & MASK != pchess->turn)
+							if(pchess->chess[j+1][i] == 0 || (pchess->chess[j+1][i] & MASK) != pchess->turn)
 								append_movelist(movelist,&right,pchess);
 
 					}
@@ -886,7 +887,7 @@ MOVELIST* get_move_list(CHESS* pchess)
 						front.destx = j;
 						front.desty = i-1;
 						if(i-1>=0)
-							if(pchess->chess[j][i-1] == 0 || pchess->chess[j][i-1] & MASK != pchess->turn)
+							if(pchess->chess[j][i-1] == 0 || (pchess->chess[j][i-1] & MASK) != pchess->turn)
 								append_movelist(movelist,&front,pchess);
 					}
 
@@ -897,7 +898,7 @@ MOVELIST* get_move_list(CHESS* pchess)
 						front.destx = j;
 						front.desty = i+1;
 						if(i+1<10)
-							if(pchess->chess[j][i+1] == 0 || pchess->chess[j][i+1] & MASK != pchess->turn)
+							if(pchess->chess[j][i+1] == 0 || (pchess->chess[j][i+1] & MASK) != pchess->turn)
 								append_movelist(movelist,&front,pchess);
 					}
 				}
@@ -1157,8 +1158,97 @@ int nextmoverev(CHESS* pchess)
 	}
 	return 0;
 }
+
+int check_end(CHESS* pchess)
+{
+	int i = 0;
+	int j = 0;
+	int rflag = 0;
+	int bflag = 0;
+	for(;i<9;i++)
+	{
+		for(j=0;j<10;j++)
+		{
+			if(pchess->chess[i][j] == JIANG)
+				rflag = 1;
+			if(pchess->chess[i][j] == (JIANG|BLACK))
+				bflag = 1;
+		}
+	}
+	if(bflag && rflag)
+	{
+		return 0;
+	}
+	else
+	{
+		if(bflag)
+			return 2;
+		if(rflag)
+			return 1;
+		return 0;
+	}
+}
+int get_random_vs()
+{
+	CHESS* pchess = get_chess_from_fen("RNBAKABNR/9/1C5C1/P1P1P1P1P/9/9/p1p1p1p1p/1c5c1/9/rnbakabnr ");
+	CHESS* pchessbk = pchess;
+	while(1)
+	{
+		MOVELIST* prev = NULL;
+		int index = 0;
+		while(pchess)
+		{
+			MOVELIST* ml = get_move_list(pchess);
+
+			if(prev != NULL){
+				free(prev->move_list);
+				free(prev);
+			}
+			prev = ml;
+			int count = ml->count;
+			int random = rand()%count;
+			//printf("count random %d %d\n",count,random);
+			MOVE* mv = ml->move_list+random;
+			pchess = &mv->chess;
+			index++;
+			int ret = check_end(pchess);
+			if(index>2000)
+				ret = 3;
+			if(ret == 1)
+			{
+				printf("R Win %d\n",index);
+				free(ml->move_list);
+				free(ml);
+				pchess = pchessbk;
+				break;
+			}
+			if(ret == 2)
+			{
+				printf("B Win %d\n",index);
+				free(ml->move_list);
+				free(ml);
+				pchess = pchessbk;
+				break;
+			}
+			if(ret == 3)
+			{
+				printf("Out Of Step\n");
+				free(ml->move_list);
+				free(ml);
+				pchess = pchessbk;
+				break;
+			}
+
+			//printchess(pchess);
+			//printf("\n");
+		}
+	}
+	return 0;
+}
 int main()
 {
+	srand(time(NULL));
+	get_random_vs();
 	CHESS* pchess = get_chess_from_fen("RNBAKABNR/9/1C5C1/P1P1P1P1P/9/9/p1p1p1p1p/1c5c1/9/rnbakabnr ");
 	nextmove(pchess);
 }
