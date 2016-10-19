@@ -1,6 +1,8 @@
 #include "stdlib.h"
 #include "stdio.h"
 #include "string.h"
+#include "ctype.h"
+#include "time.h"
 #define JU 0x1
 #define MA (0x1<<1)
 #define XIANG (0x1<<2)
@@ -681,8 +683,10 @@ MOVELIST* get_move_list(CHESS* pchess)
 					lefttop.destx = j-2;
 					if(invalid_move(j-2,i-2))
 					{
-						if(pchess->chess[j-2][i-2] == 0 || (pchess->chess[j-2][i-2] & MASK) != pchess->turn)
-							append_movelist(movelist,&lefttop,pchess);
+						if(!(pchess->turn == BLACK && (j-2<4))) {
+							if(pchess->chess[j-2][i-2] == 0 || (pchess->chess[j-2][i-2] & MASK) != pchess->turn)
+								append_movelist(movelist,&lefttop,pchess);
+						}
 					}
 					leftbottom.sourcex = j;
 					leftbottom.sourcey = i;
@@ -690,8 +694,10 @@ MOVELIST* get_move_list(CHESS* pchess)
 					leftbottom.desty = i + 2;
 					if(invalid_move(j-2,i+2))
 					{
-						if(pchess->chess[j-2][i+2] == 0 || (pchess->chess[j-2][i+2] & MASK) != pchess->turn)
-							append_movelist(movelist,&leftbottom,pchess);
+						if(!(pchess->turn == BLACK && (j-2<4))) {
+							if(pchess->chess[j-2][i+2] == 0 || (pchess->chess[j-2][i+2] & MASK) != pchess->turn)
+								append_movelist(movelist,&leftbottom,pchess);
+						}
 					}
 					rightbottom.sourcex = j;
 					rightbottom.sourcey = i;
@@ -699,8 +705,10 @@ MOVELIST* get_move_list(CHESS* pchess)
 					rightbottom.desty = i + 2;
 					if(invalid_move(j+2,i+2))
 					{
-						if(pchess->chess[j+2][i+2] == 0 || (pchess->chess[j+2][i+2] & MASK) != pchess->turn)
-							append_movelist(movelist,&rightbottom,pchess);
+						if(!(pchess->turn == RED && (j+2<5))) {
+							if(pchess->chess[j+2][i+2] == 0 || (pchess->chess[j+2][i+2] & MASK) != pchess->turn)
+								append_movelist(movelist,&rightbottom,pchess);
+						}
 					}
 					righttop.sourcex = j;
 					righttop.sourcey = i;
@@ -708,8 +716,10 @@ MOVELIST* get_move_list(CHESS* pchess)
 					righttop.desty = i - 2;
 					if(invalid_move(j+2,i-2))
 					{
-						if(pchess->chess[j+2][i-2] == 0 || (pchess->chess[j+2][i-2] & MASK) != pchess->turn)
-							append_movelist(movelist,&righttop,pchess);
+						if(!(pchess->turn == RED && (j+2<5))) {
+							if(pchess->chess[j+2][i-2] == 0 || (pchess->chess[j+2][i-2] & MASK) != pchess->turn)
+								append_movelist(movelist,&righttop,pchess);
+						}
 					}
 
 				}
@@ -1163,6 +1173,10 @@ int check_end(CHESS* pchess)
 {
 	int i = 0;
 	int j = 0;
+	int irjiang = 0;
+	int jrjiang = 0;
+	int ibjiang = 0;
+	int jbjiang = 0;
 	int rflag = 0;
 	int bflag = 0;
 	for(;i<9;i++)
@@ -1170,13 +1184,45 @@ int check_end(CHESS* pchess)
 		for(j=0;j<10;j++)
 		{
 			if(pchess->chess[i][j] == JIANG)
+			{
+				irjiang = i;
+				jrjiang = j;
 				rflag = 1;
+			}
 			if(pchess->chess[i][j] == (JIANG|BLACK))
+			{
+				ibjiang = i;
+				jbjiang = j;
 				bflag = 1;
+			}
 		}
 	}
 	if(bflag && rflag)
 	{
+		if( irjiang == ibjiang)
+		{
+			int emptylineflag = 0;
+			int it = jrjiang+1;
+			for(;it<jbjiang;it++)
+			{
+				if(pchess->chess[irjiang][it] != 0)
+				{
+					emptylineflag = 1;
+					break;
+				}
+			}
+			if(emptylineflag == 0)
+			{
+				if(pchess->turn == RED)
+				{
+					return 1;
+				}
+				if(pchess->turn == BLACK)
+				{
+					return 2;
+				}
+			}
+		}
 		return 0;
 	}
 	else
@@ -1190,8 +1236,11 @@ int check_end(CHESS* pchess)
 }
 int get_random_vs()
 {
-	CHESS* pchess = get_chess_from_fen("RNBAKABNR/9/1C5C1/P1P1P1P1P/9/9/p1p1p1p1p/1c5c1/9/rnbakabnr ");
+	CHESS* pchess = get_chess_from_fen("1NBAKABN1/9/1C5C1/P1P1P1P1P/9/9/p1p1p1p1p/9/1c5c1/rnbakabnr ");
 	CHESS* pchessbk = pchess;
+	int round = 0;
+	int rwin = 0;
+	int bwin = 0;
 	while(1)
 	{
 		MOVELIST* prev = NULL;
@@ -1209,14 +1258,33 @@ int get_random_vs()
 			int random = rand()%count;
 			//printf("count random %d %d\n",count,random);
 			MOVE* mv = ml->move_list+random;
+			int ckret = 0;
+			{
+				int mvindex = 0;
+				for(mvindex = 0;mvindex<count;mvindex++)
+				{
+					CHESS* ckchess = &(ml->move_list+mvindex)->chess;
+					ckret = 0;
+					ckret = check_end(ckchess);
+					if(ckret != 0)
+					{
+						//printf("End Here\n");
+						break;
+					}
+				}
+			}
 			pchess = &mv->chess;
 			index++;
 			int ret = check_end(pchess);
 			if(index>2000)
 				ret = 3;
+			if(ckret != 0)
+				ret = ckret;
 			if(ret == 1)
 			{
-				printf("R Win %d\n",index);
+				rwin++;
+				//printchess(pchess);
+				//printf("R Win %d\n",index);
 				free(ml->move_list);
 				free(ml);
 				pchess = pchessbk;
@@ -1224,7 +1292,9 @@ int get_random_vs()
 			}
 			if(ret == 2)
 			{
-				printf("B Win %d\n",index);
+				bwin++;
+				//printchess(pchess);
+				//printf("B Win %d\n",index);
 				free(ml->move_list);
 				free(ml);
 				pchess = pchessbk;
@@ -1232,16 +1302,22 @@ int get_random_vs()
 			}
 			if(ret == 3)
 			{
-				printf("Out Of Step\n");
+				//printf("Out Of Step\n");
 				free(ml->move_list);
 				free(ml);
 				pchess = pchessbk;
 				break;
 			}
+			if(ret == 4)
+			{
+				pchess = pchessbk;
+				break;
+			}
 
-			//printchess(pchess);
-			//printf("\n");
 		}
+		round++;
+		//printf("Round %d\n",round);
+		printf("rwin %d bwin %d\n",rwin,bwin);
 	}
 	return 0;
 }
@@ -1249,6 +1325,6 @@ int main()
 {
 	srand(time(NULL));
 	get_random_vs();
-	CHESS* pchess = get_chess_from_fen("RNBAKABNR/9/1C5C1/P1P1P1P1P/9/9/p1p1p1p1p/1c5c1/9/rnbakabnr ");
-	nextmove(pchess);
+	//CHESS* pchess = get_chess_from_fen("R2AKABNR/9/1C5C1/P1P1P1P1P/9/9/1111p1111/1c5c1/9/rnbakabnr ");
+	//nextmove(pchess);
 }
