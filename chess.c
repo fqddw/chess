@@ -1069,6 +1069,7 @@ CHESS* get_chess_from_fen(char* fen)
 			pchess->chess[i][j] = 0;
 		}
 	}
+	int flag = 0;
 	char* data = fen;
 	while(line<10)
 	{
@@ -1076,8 +1077,13 @@ CHESS* get_chess_from_fen(char* fen)
 		int chessoffset = 0;
 		for(;;i++)
 		{
-			if(data[i] == ' ')
+			if(data[i] == ' ') {
+				if(data[i+1] == '1')
+					pchess->turn = RED;
+				else
+					pchess->turn = BLACK;
 				return pchess;
+			}
 			if(data[i] == '/')
 			{
 				data = data+i+1;
@@ -1244,7 +1250,7 @@ int get_random_vs(CHESS* pchessin)
 	int bwin = 0;
 	int i = 0;
 	MOVELIST* rml = get_move_list(pchess);
-	while(round < 10000)
+	while(round < 1000)
 	{
 		MOVELIST* prev = NULL;
 		int index = 0;
@@ -1326,7 +1332,7 @@ int get_random_vs(CHESS* pchessin)
 int main()
 {
 	srand(time(NULL));
-	CHESS* pchess = get_chess_from_fen("RNBAKABNR/9/1C5C1/P1P1P1P1P/9/9/p1p1p1p1p/1c5c1/9/rnbakabnr ");
+	CHESS* pchess = get_chess_from_fen("RNBAKABNR/9/115C1/P1P1P1P1P/9/9/p1p1p1p1p/1c5c1/9/rCbakabnr 2");
 	MOVELIST* plist = get_move_list(pchess);
 	int i = 0;
 	for(;i<plist->count;i++) {
