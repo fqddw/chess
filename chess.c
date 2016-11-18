@@ -13,6 +13,7 @@
 #define MASK (0x1<<7)
 #define BLACK MASK
 #define RED 0
+#define BOARD_SIZE 91
 struct _move_list;
 typedef struct _chess
 {
@@ -49,6 +50,9 @@ int getweightbyitem(int item)
 	}
 	return 0;
 }
+void init_weight(float*, int);
+float calc_weight(float*,CHESS*);
+float gweight[BOARD_SIZE];
 int calvalue(CHESS* pchess)
 {
 	return 0;
@@ -1243,7 +1247,6 @@ int check_end(CHESS* pchess)
 int get_random_vs(CHESS* pchessin)
 {
 	CHESS* pchess = pchessin;
-	printchess(pchess);
 	CHESS* pchessbk = pchess;
 	int round = 0;
 	int rwin = 0;
@@ -1277,6 +1280,8 @@ int get_random_vs(CHESS* pchessin)
 					ckret = check_end(ckchess);
 					if(ckret != 0)
 					{
+						float loss = calc_weight(gweight,pchess);
+						printf("%f\n", loss);
 						//printf("End Here\n");
 						break;
 					}
@@ -1329,10 +1334,31 @@ int get_random_vs(CHESS* pchessin)
 	printf("rwin %d bwin %d\n",rwin,bwin);
 	return 0;
 }
+void init_weight(float* weight,int size) {
+	int i = 0;
+	for(i=0;i<size;i++) {
+		weight[i] = random()%1000;
+	}
+}
+
+float calc_weight(float* weight, CHESS* pchess) {
+	int i = 0;
+	int j = 0;
+	float result = 0;
+	for(i=0;i<9;i++)
+	{
+		for(j=0;j<10;j++) {
+			result += weight[i+j*9]*pchess->chess[i][j];
+		}
+	}
+	result += weight[BOARD_SIZE-1]*pchess->turn;
+	return result;
+}
 int main()
 {
 	srand(time(NULL));
-	CHESS* pchess = get_chess_from_fen("RNBAKABNR/9/115C1/P1P1P1P1P/9/9/p1p1p1p1p/1c5c1/9/rCbakabnr 2");
+	init_weight(gweight, BOARD_SIZE);
+	CHESS* pchess = get_chess_from_fen("RNBAKABNR/9/1C5C1/P1P1P1P1P/9/9/p1p1p1p1p/1c5c1/9/rnbakabnr 1");
 	MOVELIST* plist = get_move_list(pchess);
 	int i = 0;
 	for(;i<plist->count;i++) {
