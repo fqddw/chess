@@ -1346,7 +1346,7 @@ int get_random_vs(CHESS* pchessin)
 void init_weight(float* weight,int size) {
 	int i = 0;
 	for(i=0;i<size;i++) {
-		weight[i] = random()%1000;
+		weight[i] = rand()%1000;
 	}
 }
 
