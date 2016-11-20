@@ -1259,6 +1259,7 @@ int get_random_vs(CHESS* pchessin)
 		int index = 0;
 		while(pchess)
 		{
+			printchess(pchess);
 			MOVELIST* ml = get_move_list(pchess);
 
 			if(prev != NULL){
@@ -1267,9 +1268,19 @@ int get_random_vs(CHESS* pchessin)
 			}
 			prev = ml;
 			int count = ml->count;
-			int random = rand()%count;
+			int offset = 0;
+			int bestmove = 0;
+			float max = 0;
+			for(;bestmove < count; bestmove++) {
+				float cur_weight = calc_weight(gweight, &((ml->move_list+bestmove)->chess));
+				if(cur_weight > max) {
+					max = cur_weight;
+					offset = bestmove;
+				}
+			}
+			printf("Best Move offset %d maxweight %f\n", offset, max);
 			//printf("count random %d %d\n",count,random);
-			MOVE* mv = ml->move_list+random;
+			MOVE* mv = ml->move_list+offset;
 			int ckret = 0;
 			{
 				int mvindex = 0;
@@ -1280,9 +1291,7 @@ int get_random_vs(CHESS* pchessin)
 					ckret = check_end(ckchess);
 					if(ckret != 0)
 					{
-						float loss = calc_weight(gweight,pchess);
-						printf("%f\n", loss);
-						//printf("End Here\n");
+						exit(0);
 						break;
 					}
 				}
