@@ -1244,6 +1244,43 @@ int check_end(CHESS* pchess)
 		return 0;
 	}
 }
+
+typedef struct _node
+{
+	CHESS* pchess;
+	struct _node* next;
+}NODE;
+typedef struct _list
+{
+	NODE* head;
+}LIST;
+
+LIST* alloc_list()
+{
+	LIST* plist = (LIST*)malloc(sizeof(LIST));
+	plist->head = NULL;
+	return plist;
+}
+
+NODE* alloc_node()
+{
+	NODE* node = (NODE*)malloc(sizeof(NODE));
+	node->pchess = NULL;
+	node->next = NULL;
+	return node;
+}
+void append_list(LIST* plist, CHESS* pchess)
+{
+	if(plist->head == NULL)
+	{
+		NODE* node = alloc_node();
+		node->pchess = pchess;
+		node->next = NULL;
+	}
+	else
+	{
+	}
+}
 int get_random_vs(CHESS* pchessin)
 {
 	CHESS* pchess = pchessin;
@@ -1259,7 +1296,6 @@ int get_random_vs(CHESS* pchessin)
 		int index = 0;
 		while(pchess)
 		{
-			printchess(pchess);
 			MOVELIST* ml = get_move_list(pchess);
 
 			if(prev != NULL){
@@ -1271,18 +1307,23 @@ int get_random_vs(CHESS* pchessin)
 			int offset = 0;
 			int bestmove = 0;
 			float max = 0;
+			if(0)
+			{
 			for(;bestmove < count; bestmove++) {
 				float cur_weight = calc_weight(gweight, &((ml->move_list+bestmove)->chess));
-				if(cur_weight > max) {
+				if(cur_weight >= max) {
 					max = cur_weight;
 					offset = bestmove;
 				}
 			}
-			printf("Best Move offset %d maxweight %f\n", offset, max);
+			}
+
+			offset = rand()%count;
+			//printf("Best Move offset %d maxweight %f\n", offset, max);
 			//printf("count random %d %d\n",count,random);
 			MOVE* mv = ml->move_list+offset;
 			int ckret = 0;
-			{
+			/*{
 				int mvindex = 0;
 				for(mvindex = 0;mvindex<count;mvindex++)
 				{
@@ -1295,7 +1336,7 @@ int get_random_vs(CHESS* pchessin)
 						break;
 					}
 				}
-			}
+			}*/
 			pchess = &mv->chess;
 			index++;
 			int ret = check_end(pchess);
@@ -1310,6 +1351,10 @@ int get_random_vs(CHESS* pchessin)
 				//printf("R Win %d\n",index);
 				free(ml->move_list);
 				free(ml);
+				float weight_result = 0.0;
+				weight_result = calc_weight(gweight, pchess);
+				printchess(pchess);
+				printf("R win Weight %f\n", weight_result);
 				pchess = pchessbk;
 				break;
 			}
@@ -1320,6 +1365,10 @@ int get_random_vs(CHESS* pchessin)
 				//printf("B Win %d\n",index);
 				free(ml->move_list);
 				free(ml);
+				float weight_result = 0.0;
+				weight_result = calc_weight(gweight, pchess);
+				printchess(pchess);
+				printf("B win Weight %f\n", weight_result);
 				pchess = pchessbk;
 				break;
 			}
@@ -1370,9 +1419,9 @@ int main()
 	CHESS* pchess = get_chess_from_fen("RNBAKABNR/9/1C5C1/P1P1P1P1P/9/9/p1p1p1p1p/1c5c1/9/rnbakabnr 1");
 	MOVELIST* plist = get_move_list(pchess);
 	int i = 0;
-	for(;i<plist->count;i++) {
-		get_random_vs(&(plist->move_list+i)->chess);
-	}
+	//for(;i<plist->count;i++) {
+	get_random_vs(pchess);
+	//}
 	//CHESS* pchess = get_chess_from_fen("R2AKABNR/9/1C5C1/P1P1P1P1P/9/9/1111p1111/1c5c1/9/rnbakabnr ");
 	//nextmove(pchess);
 }
