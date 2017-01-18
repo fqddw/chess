@@ -100,6 +100,22 @@ typedef struct _movetree
 	MOVELIST* root;
 }MOVETREE;
 void printchess(CHESS*);
+
+int * chess_to_buffer(CHESS* pchess)
+{
+	int * weights_buffer = (int*)malloc((BOARD_SIZE+1)*sizeof(int));
+	int index_x = 0;
+	int index_y = 0;
+	for(;index_x< 10; index_x++)
+	{
+		for(index_y = 0;index_y< 9; index_y++)
+		{
+			weights_buffer[index_x*9+index_y] = pchess->chess[index_y][index_x];
+		}
+	}
+	weights_buffer[BOARD_SIZE-1] = pchess->turn;
+	return weights_buffer;
+}
 int printtreecoord(TREECOORD* treecoord)
 {
 	int i = 0;
@@ -687,7 +703,7 @@ MOVELIST* get_move_list(CHESS* pchess)
 					lefttop.destx = j-2;
 					if(invalid_move(j-2,i-2))
 					{
-						if(!(pchess->turn == BLACK && (j-2<4))) {
+						if(!((pchess->turn == BLACK) && (i-2<4))) {
 							if(pchess->chess[j-2][i-2] == 0 || (pchess->chess[j-2][i-2] & MASK) != pchess->turn)
 								append_movelist(movelist,&lefttop,pchess);
 						}
@@ -698,7 +714,7 @@ MOVELIST* get_move_list(CHESS* pchess)
 					leftbottom.desty = i + 2;
 					if(invalid_move(j-2,i+2))
 					{
-						if(!(pchess->turn == BLACK && (j-2<4))) {
+						if(!((pchess->turn == RED) && (i+2>5))) {
 							if(pchess->chess[j-2][i+2] == 0 || (pchess->chess[j-2][i+2] & MASK) != pchess->turn)
 								append_movelist(movelist,&leftbottom,pchess);
 						}
@@ -709,7 +725,7 @@ MOVELIST* get_move_list(CHESS* pchess)
 					rightbottom.desty = i + 2;
 					if(invalid_move(j+2,i+2))
 					{
-						if(!(pchess->turn == RED && (j+2<5))) {
+						if(!((pchess->turn == RED) && (i+2>5))) {
 							if(pchess->chess[j+2][i+2] == 0 || (pchess->chess[j+2][i+2] & MASK) != pchess->turn)
 								append_movelist(movelist,&rightbottom,pchess);
 						}
@@ -720,7 +736,7 @@ MOVELIST* get_move_list(CHESS* pchess)
 					righttop.desty = i - 2;
 					if(invalid_move(j+2,i-2))
 					{
-						if(!(pchess->turn == RED && (j+2<5))) {
+						if(!((pchess->turn == BLACK) && (i-2<4))) {
 							if(pchess->chess[j+2][i-2] == 0 || (pchess->chess[j+2][i-2] & MASK) != pchess->turn)
 								append_movelist(movelist,&righttop,pchess);
 						}
@@ -828,8 +844,10 @@ MOVELIST* get_move_list(CHESS* pchess)
 					if(pchess->turn == RED)
 					{
 						if(i-1>=0)
-							if(pchess->chess[j][i-1] == 0 || (pchess->chess[j][i-1] & MASK) != pchess->turn)
-								append_movelist(movelist,&top,pchess);
+							if (pchess->chess[j][i - 1] == 0 || (pchess->chess[j][i - 1] & MASK) != pchess->turn)
+							{
+								append_movelist(movelist, &top, pchess);
+							}
 					}
 					if(pchess->turn == BLACK)
 					{
@@ -1281,7 +1299,7 @@ void append_list(LIST* plist, CHESS* pchess)
 	{
 	}
 }
-int get_random_vs(CHESS* pchessin)
+int* get_random_vs(CHESS* pchessin)
 {
 	CHESS* pchess = pchessin;
 	CHESS* pchessbk = pchess;
@@ -1290,7 +1308,7 @@ int get_random_vs(CHESS* pchessin)
 	int bwin = 0;
 	int i = 0;
 	MOVELIST* rml = get_move_list(pchess);
-	while(round < 1000)
+	//while(round < 1000)
 	{
 		MOVELIST* prev = NULL;
 		int index = 0;
@@ -1298,27 +1316,26 @@ int get_random_vs(CHESS* pchessin)
 		{
 			MOVELIST* ml = get_move_list(pchess);
 
-			if(prev != NULL){
-				free(prev->move_list);
-				free(prev);
-			}
-			prev = ml;
+			
 			int count = ml->count;
 			int offset = 0;
 			int bestmove = 0;
 			float max = 0;
-			if(0)
+			if(pchess->turn == RED)
 			{
-			for(;bestmove < count; bestmove++) {
-				float cur_weight = calc_weight(gweight, &((ml->move_list+bestmove)->chess));
-				if(cur_weight >= max) {
-					max = cur_weight;
-					offset = bestmove;
+				for(;bestmove < count; bestmove++) {
+					float cur_weight = calc_weight(gweight, &((ml->move_list+bestmove)->chess));
+					if(cur_weight >= max) {
+						max = cur_weight;
+						offset = bestmove;
+					}
 				}
 			}
+			else if (pchess->turn == BLACK)
+			{
+				offset = rand() % count;
 			}
-
-			offset = rand()%count;
+			//printf("%d %d %d\n", offset, count, pchess->turn);
 			//printf("Best Move offset %d maxweight %f\n", offset, max);
 			//printf("count random %d %d\n",count,random);
 			MOVE* mv = ml->move_list+offset;
@@ -1340,8 +1357,12 @@ int get_random_vs(CHESS* pchessin)
 			pchess = &mv->chess;
 			index++;
 			int ret = check_end(pchess);
+			//printf("%d\n",ret);
 			if(index>2000)
+			{
 				ret = 3;
+				printf("step out\n");
+			}
 			if(ckret != 0)
 				ret = ckret;
 			if(ret == 1)
@@ -1349,12 +1370,16 @@ int get_random_vs(CHESS* pchessin)
 				rwin++;
 				//printchess(pchess);
 				//printf("R Win %d\n",index);
+				//fwrite(chess_to_buffer(pchess), BOARD_SIZE*sizeof(int),1, stdout);
+				int* buffer = chess_to_buffer(pchess);
+				buffer[BOARD_SIZE] = -10000;
 				free(ml->move_list);
 				free(ml);
+				return buffer;
 				float weight_result = 0.0;
-				weight_result = calc_weight(gweight, pchess);
-				printchess(pchess);
-				printf("R win Weight %f\n", weight_result);
+				//weight_result = calc_weight(gweight, pchess);
+				//printchess(pchess);
+				//printf("R win Weight %f\n", weight_result);
 				pchess = pchessbk;
 				break;
 			}
@@ -1363,12 +1388,17 @@ int get_random_vs(CHESS* pchessin)
 				bwin++;
 				//printchess(pchess);
 				//printf("B Win %d\n",index);
+				//fwrite(chess_to_buffer(pchess), BOARD_SIZE*sizeof(int), 1, stdout);
+				int* buffer = chess_to_buffer(pchess);
+				buffer[BOARD_SIZE] = 0;
 				free(ml->move_list);
 				free(ml);
+				
+				return buffer;
 				float weight_result = 0.0;
-				weight_result = calc_weight(gweight, pchess);
-				printchess(pchess);
-				printf("B win Weight %f\n", weight_result);
+				//weight_result = calc_weight(gweight, pchess);
+				//printchess(pchess);
+				//printf("B win Weight %f\n", weight_result);
 				pchess = pchessbk;
 				break;
 			}
@@ -1385,11 +1415,16 @@ int get_random_vs(CHESS* pchessin)
 				pchess = pchessbk;
 				break;
 			}
+			if (prev != NULL){
+				free(prev->move_list);
+				free(prev);
+			}
+			prev = ml;
 		}
 		round++;
 		//printf("Round %d\n",round);
 	}
-	printf("rwin %d bwin %d\n",rwin,bwin);
+	//printf("rwin %d bwin %d\n",rwin,bwin);
 	return 0;
 }
 void init_weight(float* weight,int size) {
@@ -1412,15 +1447,62 @@ float calc_weight(float* weight, CHESS* pchess) {
 	result += weight[BOARD_SIZE-1]*pchess->turn;
 	return result;
 }
+
+int** train(CHESS* pchess)
+{
+	int** mat = (int**)malloc(BOARD_SIZE*sizeof(int*));
+	int index = 0;
+	for(;index<BOARD_SIZE;index++)
+	{
+		mat[index] = get_random_vs(pchess);
+	}
+	return mat;
+}
+double calc_determinant(int ** mat, int size)
+{
+	return 0;
+}
+int solve(int** mat, int width, int height)
+{
+	int i = 0;
+	double* ans = (double*)malloc(height*sizeof(double));
+	int rindex= 0;
+	for(;rindex<height;rindex++)
+	{
+		ans[rindex] = (double)rand();
+	}
+	for(rindex = 0;rindex<height;rindex++)
+	{
+		float rels = 0.0;
+		for(i=0;i<width;i++)
+		{
+			double rels = 0.0;
+			if(i!=rindex)
+					rels += (ans[i]*mat[rindex][i]);
+		}
+		rels+=mat[rindex][width-1];
+		rels*=-1;
+		if(mat[rindex][rindex] == 0)
+		{
+			printf("zero %d\n", rindex);
+			return 0;
+		}
+		ans[rindex] = rels/mat[rindex][rindex];
+		printf("zero %d %lf\n", rindex, ans[rindex]);
+	}
+	return 0;
+}
 int main()
 {
 	srand(time(NULL));
 	init_weight(gweight, BOARD_SIZE);
 	CHESS* pchess = get_chess_from_fen("RNBAKABNR/9/1C5C1/P1P1P1P1P/9/9/p1p1p1p1p/1c5c1/9/rnbakabnr 1");
-	MOVELIST* plist = get_move_list(pchess);
+	int ** mat = train(pchess);
+	solve(mat, 92, 91);
+	//MOVELIST* plist = get_move_list(pchess);
 	int i = 0;
 	//for(;i<plist->count;i++) {
-	get_random_vs(pchess);
+	//get_random_vs(pchess);
 	//}
 	//CHESS* pchess = get_chess_from_fen("R2AKABNR/9/1C5C1/P1P1P1P1P/9/9/1111p1111/1c5c1/9/rnbakabnr ");
 	//nextmove(pchess);
