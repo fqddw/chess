@@ -1504,14 +1504,6 @@ int addtomatrix(double** matrix, int width, int *height, int* log, int* flag, do
 	}
 	return 0;
 }
-int addbuffer(double* dst,double* src,int width)
-{
-	int i=0;
-	for(i=0;i<width;i++)
-	{
-		dst[i]+=src[i];
-	}
-}
 int main()
 {
 	srand(time(NULL));
