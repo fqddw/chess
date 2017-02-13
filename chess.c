@@ -1455,6 +1455,13 @@ int addtomatrix(double** matrix, int width, int *height, int* log, int* flag, do
 	int finish = 0;
 	while(!finish)
 	{
+		int j=0;
+		for(;j<width;j++)
+		{
+			printf("%lf ",buffer[j]);
+		}
+		printf("\n");
+
 		int firstnonezero = 0;
 		int i=0;
 		for(i=0;i<width;i++)
@@ -1486,7 +1493,7 @@ int addtomatrix(double** matrix, int width, int *height, int* log, int* flag, do
 				else
 				{
 					buffer[i]-=(buffer[i]*firstnonezeroval/matrix[log[firstnonezero]][firstnonezero]);
-					printf("%lf %d %lf %d %lf\n", buffer[i], i, firstnonezeroval, firstnonezero, matrix[log[firstnonezero]][firstnonezero]);
+					//printf("%lf %d %lf %d %lf\n", buffer[i], i, firstnonezeroval, firstnonezero, matrix[log[firstnonezero]][firstnonezero]);
 				}
 				if(flag[BOARD_SIZE] == 1)
 				{
