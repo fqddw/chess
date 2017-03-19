@@ -884,7 +884,7 @@ MOVELIST* get_move_list(CHESS* pchess)
 					right.destx = j+1;
 					right.desty = i;
 					if(j+1<=5)
-							if(pchess->chess[j-1][i] == 0 || (pchess->chess[j-1][i] & MASK) != pchess->turn)
+							if(pchess->chess[j+1][i] == 0 || (pchess->chess[j+1][i] & MASK) != pchess->turn)
 								append_movelist(movelist,&right,pchess);
 
 
